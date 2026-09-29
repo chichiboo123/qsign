@@ -1,7 +1,9 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Clock,
   Copy,
+  Download,
+  FileUp,
   FolderOpen,
   HardDrive,
   Keyboard,
@@ -29,6 +31,8 @@ import { deleteUnusedAudio, findUnusedAudio, releaseAudio } from '../../storage/
 import { getEstimate, isPersisted, requestPersist, type StorageEstimateInfo } from '../../storage/quota';
 import { listAudioMeta } from '../../storage/audioStore';
 import { formatBytes, formatDate } from '../../utils/format';
+import { exportShow } from '../../io/exportShow';
+import { ImportError, importShow } from '../../io/importShow';
 import type { ShowSummary } from '../../types/show';
 
 interface Props {
@@ -84,6 +88,44 @@ export function HomeScreen({ onOpen, onPerform }: Props) {
     refresh();
   };
 
+  const importRef = useRef<HTMLInputElement>(null);
+  const [busy, setBusy] = useState<string | null>(null);
+
+  const handleExport = async (s: ShowSummary) => {
+    setBusy(`"${s.title}" 내보내는 중…`);
+    try {
+      const r = await exportShow(s.id);
+      toast(
+        r.missing > 0
+          ? `${r.fileName} 저장 완료. 찾지 못한 음원 ${r.missing}개는 빠졌어요.`
+          : `${r.fileName} (${formatBytes(r.bytes)}) 파일로 저장했어요.`,
+        r.missing > 0 ? 'error' : 'success',
+      );
+    } catch {
+      toast('내보내지 못했어요.', 'error');
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const handleImport = async (file: File) => {
+    setBusy(`"${file.name}" 가져오는 중…`);
+    try {
+      const r = await importShow(file);
+      refresh();
+      const note = r.asNew ? ' 같은 공연이 있어서 새 공연으로 가져왔어요.' : '';
+      const miss = r.missing > 0 ? ` 음원 ${r.missing}개는 파일 안에 없었어요.` : '';
+      toast(`"${r.show.title}"을 가져왔어요. 음원 ${r.audioCount}개.${note}${miss}`, r.missing ? 'error' : 'success');
+    } catch (e) {
+      toast(
+        e instanceof ImportError || e instanceof StorageFullError ? e.message : '가져오지 못했어요. 저장 공간을 확인해 주세요.',
+        'error',
+      );
+    } finally {
+      setBusy(null);
+    }
+  };
+
   const recent = shows[0];
 
   return (
@@ -109,7 +151,26 @@ export function HomeScreen({ onOpen, onPerform }: Props) {
               <button className="btn btn--primary" onClick={handleNew}>
                 <Plus size={18} aria-hidden="true" /> 새 공연 만들기
               </button>
+              <button className="btn" onClick={() => importRef.current?.click()} disabled={!!busy}>
+                <FileUp size={18} aria-hidden="true" /> 공연 파일 가져오기
+              </button>
+              <input
+                ref={importRef}
+                type="file"
+                accept=".zip,application/zip"
+                hidden
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  e.target.value = '';
+                  if (f) void handleImport(f);
+                }}
+              />
             </div>
+            {busy && (
+              <p className="banner" role="status">
+                {busy}
+              </p>
+            )}
           </section>
 
           <section className="panel tile tile--recent">
@@ -173,6 +234,15 @@ export function HomeScreen({ onOpen, onPerform }: Props) {
                       <button className="btn btn--sm btn--icon" onClick={() => onOpen(s.id)} title="준비하기" aria-label={`${s.title} 준비하기`}>
                         <Pencil size={15} />
                       </button>
+                      <button
+                        className="btn btn--sm btn--icon"
+                        onClick={() => handleExport(s)}
+                        disabled={!!busy}
+                        title="파일로 내보내기 (USB로 옮길 때)"
+                        aria-label={`${s.title} 파일로 내보내기`}
+                      >
+                        <Download size={15} />
+                      </button>
                       <button className="btn btn--sm btn--icon" onClick={() => handleDuplicate(s)} title="복제" aria-label={`${s.title} 복제`}>
                         <Copy size={15} />
                       </button>
@@ -197,6 +267,10 @@ export function HomeScreen({ onOpen, onPerform }: Props) {
               <li>신호를 추가하고 음원을 끌어다 놓아요.</li>
               <li>
                 <strong>공연 모드</strong>에서 <kbd>Space</kbd> = 다음, <kbd>Esc</kbd> = 모두 멈춤, <kbd>←</kbd> = 이전
+              </li>
+              <li>
+                다른 컴퓨터로 옮길 때는 <Download size={13} aria-label="내보내기" /> 로 파일을 저장해 USB로 옮기고, 거기서
+                <strong> 공연 파일 가져오기</strong>를 눌러요.
               </li>
             </ol>
           </section>
