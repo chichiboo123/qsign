@@ -4,8 +4,10 @@ import App from './App';
 import { initTheme } from './hooks/useTheme';
 import { engine } from './audio/engine';
 import { loadSettings } from './storage/showStore';
+import { initPwa } from './pwa';
 
 initTheme();
+initPwa();
 try {
   engine.setMasterVolume(loadSettings().masterVolume);
 } catch {

@@ -1143,3 +1143,24 @@ select.input option {
     padding: 4px 9px;
   }
 }
+
+/* ─── 앱 설치·업데이트 ─── */
+.banner--update {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.banner--update span {
+  flex: 1;
+  font-weight: 600;
+}
+.help__here {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 1px 8px;
+  border-radius: 999px;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border: 1px solid var(--accent-line);
+}

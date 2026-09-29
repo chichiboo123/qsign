@@ -1,4 +1,4 @@
-import { Clapperboard, Download, HardDrive, Keyboard, ListChecks } from 'lucide-react';
+import { Clapperboard, Download, HardDrive, Keyboard, ListChecks, MonitorDown } from 'lucide-react';
 import { Modal } from './Modal';
 
 /** 사용법: 첫 화면과 준비 화면의 [? 사용법]에서 연다 */
@@ -53,6 +53,16 @@ export function HelpModal({ onClose }: { onClose: () => void }) {
         <p>
           공연 목록의 <strong>[⋯] → [파일로 저장]</strong>으로 zip 파일을 만들어 USB로 옮기고, 그 컴퓨터에서
           <strong> [공연 파일 가져오기]</strong>를 누르거나 첫 화면에 파일을 끌어다 놓아요.
+        </p>
+      </section>
+
+      <section className="help__sec">
+        <h3>
+          <MonitorDown size={18} aria-hidden="true" /> 앱으로 설치하기
+        </h3>
+        <p>
+          첫 화면 오른쪽 위 <strong>[앱 설치]</strong>를 누르면 PC·태블릿·휴대폰에 앱처럼 설치돼요. 설치하면 인터넷이
+          없어도 열려요.
         </p>
       </section>
 

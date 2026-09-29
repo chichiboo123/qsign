@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { AlertTriangle, CircleHelp, FileUp, FolderOpen, HardDrive, Plus } from 'lucide-react';
+import { AlertTriangle, CircleHelp, FileUp, FolderOpen, HardDrive, MonitorDown, Plus, RefreshCw } from 'lucide-react';
 import { Logo } from '../../components/Logo';
 import { ThemeToggle } from '../../components/ThemeToggle';
 import { HelpModal } from '../../components/HelpModal';
+import { InstallModal } from '../../components/InstallModal';
+import { applyUpdate, dismissOfflineReady, promptInstall, usePwa } from '../../pwa';
 import { useDialog } from '../../components/Dialogs';
 import {
   audioIdsOf,
@@ -39,7 +41,21 @@ export function HomeScreen({ onOpen, onPerform }: Props) {
   const [shows, setShows] = useState<ShowSummary[]>(() => listShows());
   const [busy, setBusy] = useState<string | null>(null);
   const [zipOver, setZipOver] = useState(false);
-  const [modal, setModal] = useState<'help' | 'storage' | null>(null);
+  const [modal, setModal] = useState<'help' | 'storage' | 'install' | null>(null);
+  const pwa = usePwa();
+
+  // 처음 오프라인 준비가 끝나면 한 번 알려 준다
+  useEffect(() => {
+    if (!pwa.offlineReady) return;
+    toast('이제 인터넷이 없어도 큐싸인을 열 수 있어요.', 'success');
+    dismissOfflineReady();
+  }, [pwa.offlineReady, toast]);
+
+  const handleInstall = async () => {
+    const r = await promptInstall();
+    if (r === 'unavailable') setModal('install');
+    else if (r === 'accepted') toast('설치했어요. 바탕 화면이나 홈 화면에서 큐싸인을 열 수 있어요.', 'success');
+  };
   const importRef = useRef<HTMLInputElement>(null);
 
   const refresh = useCallback(() => setShows(listShows()), []);
@@ -167,6 +183,12 @@ export function HomeScreen({ onOpen, onPerform }: Props) {
       <header className="app-header">
         <Logo height={34} />
         <span className="app-header__spacer" />
+        {!pwa.standalone && (
+          <button className="btn btn--sm btn--primary-soft header-btn" onClick={() => void handleInstall()} aria-label="앱 설치">
+            <MonitorDown size={18} aria-hidden="true" />
+            <span className="header-btn__text">앱 설치</span>
+          </button>
+        )}
         <button className="btn btn--sm btn--ghost header-btn" onClick={() => setModal('help')} aria-label="사용법">
           <CircleHelp size={18} aria-hidden="true" />
           <span className="header-btn__text">사용법</span>
@@ -179,6 +201,15 @@ export function HomeScreen({ onOpen, onPerform }: Props) {
       </header>
 
       <main className="page home">
+        {pwa.needRefresh && (
+          <p className="banner banner--update" role="status">
+            <RefreshCw size={18} aria-hidden="true" />
+            <span>새 버전이 나왔어요.</span>
+            <button className="btn btn--sm btn--primary" onClick={applyUpdate}>
+              지금 업데이트
+            </button>
+          </p>
+        )}
         {needsBrowserNotice() && (
           <p className="banner banner--warn" role="note">
             <AlertTriangle size={18} aria-hidden="true" /> 큐싸인은 <strong>Chrome</strong>이나 <strong>Edge</strong>에서
@@ -254,6 +285,7 @@ export function HomeScreen({ onOpen, onPerform }: Props) {
 
       {modal === 'help' && <HelpModal onClose={() => setModal(null)} />}
       {modal === 'storage' && <StorageModal onClose={() => setModal(null)} onChanged={refresh} />}
+      {modal === 'install' && <InstallModal onClose={() => setModal(null)} />}
 
       {zipOver && (
         <div className="zip-drop" aria-hidden="true">
