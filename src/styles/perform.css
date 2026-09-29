@@ -1,0 +1,516 @@
+/* ═════════ 공연 모드 ═════════
+   재생 중 끊김이 없도록 blur·오로라 없이 평면에 가깝게 그린다. */
+
+.perform {
+  height: 100vh;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.perform__header {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: 10px var(--space-4);
+  border-bottom: 1px solid var(--border);
+  background: #0a0c11;
+}
+.perform__scene {
+  font-size: 18px;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+.perform__counter {
+  flex: none;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 22px;
+  font-weight: 700;
+  padding: 2px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+.perform__counter .muted {
+  font-size: 16px;
+  margin-left: -6px;
+}
+.perform__body {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) min(320px, 24vw);
+  grid-template-rows: minmax(0, 1fr);
+  gap: var(--space-4);
+  padding: var(--space-4);
+}
+.perform__main {
+  min-height: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+@media (max-width: 1099px) {
+  .perform__body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .side {
+    display: none !important;
+  }
+}
+@media (max-width: 640px) {
+  .hide-sm {
+    display: none;
+  }
+}
+
+/* ─── NOW PLAYING ─── */
+.now {
+  flex: none;
+  padding: 12px var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 34vh;
+  min-height: 92px;
+}
+.now__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+.now__idle {
+  font-size: 15px;
+  padding: 6px 0;
+}
+.now__list {
+  list-style: none;
+  margin: 0;
+  padding: 0 2px 2px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow-y: auto;
+  min-height: 0;
+}
+.voice {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-areas:
+    'top'
+    'bar';
+  row-gap: 6px;
+  padding: 7px 10px 9px;
+  border-radius: var(--radius-md);
+  border: 1px solid color-mix(in srgb, var(--cue) 45%, transparent);
+  background: color-mix(in srgb, var(--cue) 7%, #0d0f15);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--cue) 22%, transparent);
+}
+.voice.is-fading {
+  opacity: 0.7;
+  box-shadow: none;
+}
+.voice__top {
+  grid-area: top;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.voice__label {
+  font-weight: 700;
+  font-size: 17px;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.voice__tag {
+  flex: none;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--cue);
+}
+.voice__time {
+  flex: none;
+  font-size: 16px;
+}
+.voice__stop {
+  flex: none;
+}
+.voice__bar {
+  grid-area: bar;
+  align-self: center;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+.voice__fill {
+  height: 100%;
+  background: var(--cue);
+  transform-origin: left center;
+  transform: scaleX(0);
+  box-shadow: 0 0 10px var(--cue);
+}
+.voice__remain {
+  flex: none;
+  font-size: 14px;
+  color: var(--text-muted);
+  min-width: 88px;
+  text-align: right;
+}
+
+/* 레벨 미터 */
+.level {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.level__bars {
+  display: inline-flex;
+  gap: 3px;
+  align-items: center;
+}
+.level__seg {
+  width: 7px;
+  height: 14px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.08);
+}
+.level__seg.is-lit {
+  background: var(--accent-from);
+}
+.level__seg.is-warm.is-lit {
+  background: var(--cue-sfx);
+}
+.level__seg.is-hot.is-lit {
+  background: var(--danger);
+}
+.level__db {
+  font-size: 13px;
+  color: var(--text-muted);
+  min-width: 56px;
+  text-align: right;
+}
+
+/* ─── NEXT SIGNAL ─── */
+.next {
+  flex: 1;
+  min-height: 0;
+  padding: var(--space-4) var(--space-5);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--space-3);
+  border: 2px solid color-mix(in srgb, var(--cue) 40%, transparent);
+  overflow: hidden;
+}
+.next.is-waiting {
+  animation: breathe 3.2s ease-in-out infinite;
+}
+@keyframes breathe {
+  0%,
+  100% {
+    border-color: color-mix(in srgb, var(--cue) 28%, transparent);
+    box-shadow: 0 0 0 transparent;
+  }
+  50% {
+    border-color: color-mix(in srgb, var(--cue) 85%, transparent);
+    box-shadow: 0 0 28px color-mix(in srgb, var(--cue) 22%, transparent);
+  }
+}
+.next__top {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+.next__scene {
+  font-size: 15px;
+}
+.next__signal {
+  font-size: clamp(28px, 3.4vw, 44px);
+  font-weight: 700;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+.next__signal.is-empty {
+  color: var(--text-muted);
+  font-size: 28px;
+}
+.next__what {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  font-size: 22px;
+}
+.next__arrow {
+  color: var(--text-muted);
+}
+.next__label {
+  font-weight: 700;
+}
+.next__after {
+  font-size: 15px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.next__end {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+/* ─── 다음(GO) 버튼 ─── */
+.go {
+  flex: none;
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  height: clamp(120px, 17vh, 150px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  border: 0;
+  border-radius: var(--radius-lg);
+  background: var(--accent-gradient);
+  color: var(--on-accent);
+  cursor: pointer;
+  font-family: var(--font-body);
+  transition:
+    transform var(--dur-fast) var(--ease),
+    filter var(--dur) var(--ease);
+}
+.go:hover:not(:disabled) {
+  filter: brightness(1.06);
+}
+.go:active:not(:disabled) {
+  transform: scale(0.995);
+}
+.go:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+.go:focus-visible {
+  outline: 3px solid var(--text);
+  outline-offset: 3px;
+}
+.go__text {
+  font-size: 44px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+.go__key {
+  font-size: 16px;
+  background: rgba(7, 8, 12, 0.18);
+  border-color: rgba(7, 8, 12, 0.35);
+  color: var(--on-accent);
+  font-weight: 700;
+  padding: 3px 10px;
+}
+.go.is-pulse {
+  animation: go-pulse 200ms var(--ease);
+}
+@keyframes go-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(34, 211, 238, 0.7);
+  }
+  100% {
+    box-shadow: 0 0 0 16px rgba(34, 211, 238, 0);
+  }
+}
+/* 연타 방지: 500ms 동안 어둡게 + 아래 막대가 채워짐 */
+.go.is-locked {
+  filter: saturate(0.4) brightness(0.72);
+  cursor: wait;
+}
+.go__lock {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 6px;
+  width: 100%;
+  background: rgba(7, 8, 12, 0.55);
+  transform-origin: left center;
+  transform: scaleX(0);
+}
+.go.is-locked .go__lock {
+  animation: go-lock 500ms linear forwards;
+}
+@keyframes go-lock {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/* ─── 아래 줄 ─── */
+.perform__bottom {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+.perform__prev,
+.stop-all {
+  min-height: 52px;
+  padding: 8px 18px;
+  font-size: 17px;
+}
+.perform__hint {
+  flex: 1;
+  text-align: center;
+}
+.stop-all {
+  border-color: rgba(244, 63, 94, 0.6);
+  background: rgba(244, 63, 94, 0.14);
+  color: #ffe1e6;
+}
+.stop-all:hover:not(:disabled) {
+  background: rgba(244, 63, 94, 0.24);
+  border-color: var(--danger);
+}
+.stop-all.is-stopping {
+  background: var(--danger);
+  color: #fff;
+  border-color: var(--danger);
+}
+.stop-all.is-stopping kbd,
+.stop-all kbd {
+  background: rgba(0, 0, 0, 0.25);
+  color: inherit;
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+/* ─── 오른쪽 신호 목록 ─── */
+.side {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 12px 0 12px 12px;
+}
+.side__title {
+  padding: 0 12px 8px 4px;
+}
+.side__list,
+.side__list ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.side__list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.side__scene-title {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-muted);
+  padding: 4px 6px;
+}
+.side-cue {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 8px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  border: 1px solid transparent;
+}
+.side-cue__num {
+  color: var(--text-muted);
+  font-size: 13px;
+  flex: none;
+}
+.side-cue__icon {
+  color: var(--cue);
+  flex: none;
+}
+.side-cue__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.side-cue.is-done {
+  opacity: 0.45;
+}
+.side-cue.is-next {
+  border-color: color-mix(in srgb, var(--cue) 70%, transparent);
+  background: color-mix(in srgb, var(--cue) 12%, transparent);
+  font-weight: 700;
+}
+.side-cue.is-next .side-cue__num {
+  color: var(--text);
+}
+.side-cue.is-playing {
+  opacity: 1;
+  box-shadow: inset 3px 0 0 var(--cue);
+}
+
+/* ─── 시작 대기 화면 ─── */
+.gate {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: var(--space-4);
+  background: rgba(5, 6, 10, 0.92);
+}
+.gate__card {
+  width: min(520px, 100%);
+  padding: var(--space-6);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  text-align: center;
+  background: #0e1118;
+}
+.gate__title {
+  font-size: 30px;
+}
+.gate__keys {
+  list-style: none;
+  padding: 0;
+  margin: var(--space-2) 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px 18px;
+  font-size: 15px;
+}
+.gate__start {
+  width: 100%;
+  min-height: 72px;
+  font-size: 24px;
+  border-radius: var(--radius-lg);
+}
+.gate__note {
+  min-height: 1.6em;
+}
