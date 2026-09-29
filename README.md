@@ -6,7 +6,7 @@
 순서대로 틀 수 있게 돕는 브라우저 기반 재생기입니다.
 전문 공연 프로그램(QLab 등)의 핵심인 "신호 목록 + 다음 버튼"을 초등학생 눈높이로 단순하게 만들었습니다.
 
-- 배포 주소: <https://chichiboo123.github.io/qsign/>
+- 배포 주소: <https://qsign.chichiboo.link/> (GitHub Pages: <https://chichiboo123.github.io/qsign/>)
 - 권장 환경: 윈도우 PC·노트북의 **Chrome** 또는 **Edge**
 
 ## 이런 점이 좋아요
@@ -61,7 +61,7 @@
 
 ```bash
 npm install      # 처음 한 번
-npm run dev      # 개발 서버 실행 → 터미널에 나온 주소(예: http://localhost:5173/qsign/)를 엽니다
+npm run dev      # 개발 서버 실행 → 터미널에 나온 주소(예: http://localhost:5173/)를 엽니다
 ```
 
 그 밖의 명령:
@@ -82,12 +82,16 @@ npm run typecheck
 2. **Settings → General → Default branch** 가 `main` 인지 확인합니다.
 3. `main` 에 push하고 **Actions** 탭에서 "GitHub Pages 배포"가 초록색으로 끝나면 배포 주소에서 확인합니다.
 
-### 배포 경로(base) 바꾸기
+### 배포 경로(base)와 커스텀 도메인
 
-기본 배포 경로는 `/qsign/` 입니다. 커스텀 도메인(예: `qsign.example.com`)을 연결해서 경로가 `/`가 되면:
+앱은 **상대 경로(`./`)** 로 빌드되기 때문에 커스텀 도메인(`https://qsign.chichiboo.link/`)과
+GitHub Pages 주소(`https://chichiboo123.github.io/qsign/`) 어느 쪽에서 열어도 그대로 동작해요.
 
-- **GitHub Actions:** 저장소 **Settings → Secrets and variables → Actions → Variables** 에 `VITE_BASE` = `/` 를 추가합니다.
-- **로컬:** `.env.example` 을 `.env` 로 복사하고 `VITE_BASE=/` 로 바꿉니다.
+커스텀 도메인 설정은 저장소 **Settings → Pages → Custom domain** 에서 해요.
+(GitHub Actions로 배포하므로 `CNAME` 파일은 필요 없어요.)
+
+특정 절대 경로로 고정해야 하면 저장소 **Settings → Secrets and variables → Actions → Variables** 에
+`VITE_BASE`(예: `/qsign/`)를 추가해요. 로컬에서는 `.env.example`을 `.env`로 복사해 바꿔요.
 
 ## 저장 구조
 

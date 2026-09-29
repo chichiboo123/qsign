@@ -27,8 +27,9 @@ jobs:
       - run: npm ci
       - run: npm run build
         env:
-          # 커스텀 도메인을 연결하면 저장소 Variables에 VITE_BASE=/ 를 추가한다.
-          VITE_BASE: ${{ vars.VITE_BASE || '/qsign/' }}
+          # 기본은 상대 경로('./')라 커스텀 도메인과 github.io/qsign/ 모두에서 동작한다.
+          # 특정 경로로 고정해야 할 때만 저장소 Variables에 VITE_BASE를 추가한다.
+          VITE_BASE: ${{ vars.VITE_BASE || './' }}
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
