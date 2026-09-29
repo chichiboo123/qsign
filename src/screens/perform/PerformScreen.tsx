@@ -272,13 +272,14 @@ function Perform({ show, onExit }: { show: Show; onExit: () => void }) {
             showHelp();
             blur(e);
           }}
+          aria-label="도움말"
         >
           <CircleHelp size={17} aria-hidden="true" />
           <span className="hide-md">도움말</span>
         </button>
         <ThemeToggle compact />
         <button
-          className="btn btn--sm btn--ghost"
+          className="btn btn--sm btn--ghost perform__fs"
           onClick={(e) => {
             void (isFullscreen ? exitFullscreen() : enterFullscreen());
             blur(e);
@@ -289,13 +290,14 @@ function Perform({ show, onExit }: { show: Show; onExit: () => void }) {
           <span className="hide-md">{isFullscreen ? '전체 화면 끝' : '전체 화면'}</span>
         </button>
         <button
-          className="btn btn--sm"
+          className="btn btn--sm perform__exit"
           onClick={(e) => {
             void exit();
             blur(e);
           }}
+          aria-label="준비 모드로 돌아가기"
         >
-          <LogOut size={16} aria-hidden="true" /> 준비 모드로
+          <LogOut size={16} aria-hidden="true" /> <span className="hide-sm">준비 모드로</span>
         </button>
       </header>
 
@@ -322,7 +324,7 @@ function Perform({ show, onExit }: { show: Show; onExit: () => void }) {
                   >
                     <RotateCcw size={18} aria-hidden="true" /> 처음부터 다시
                   </button>
-                  <span className="muted">
+                  <span className="muted key-hint">
                     <kbd>←</kbd> 키로 앞 신호로 돌아갈 수도 있어요.
                   </span>
                 </div>
@@ -367,7 +369,7 @@ function Perform({ show, onExit }: { show: Show; onExit: () => void }) {
           >
             <Play size={40} fill="currentColor" aria-hidden="true" />
             <span className="go__text">다음</span>
-            <kbd className="go__key">SPACE</kbd>
+            <kbd className="go__key key-hint">SPACE</kbd>
             <span className="go__lock" aria-hidden="true" />
           </button>
 
@@ -380,7 +382,7 @@ function Perform({ show, onExit }: { show: Show; onExit: () => void }) {
               }}
               disabled={cursor === 0}
             >
-              <ChevronLeft size={22} aria-hidden="true" /> 이전 <kbd>←</kbd>
+              <ChevronLeft size={22} aria-hidden="true" /> 이전 <kbd className="key-hint">←</kbd>
             </button>
             <span className={`perform__hint ${stoppingAll ? 'is-alert' : ''}`}>
               {stoppingAll
@@ -395,7 +397,7 @@ function Perform({ show, onExit }: { show: Show; onExit: () => void }) {
               }}
             >
               <Square size={20} fill="currentColor" aria-hidden="true" />
-              {stoppingAll ? '바로 멈춤' : '모두 멈춤'} <kbd>ESC</kbd>
+              {stoppingAll ? '바로 멈춤' : '모두 멈춤'} <kbd className="key-hint">ESC</kbd>
             </button>
           </div>
         </main>
@@ -426,7 +428,7 @@ function Perform({ show, onExit }: { show: Show; onExit: () => void }) {
                 </span>
               </p>
             )}
-            <ul className="gate__keys">
+            <ul className="gate__keys key-hint">
               <li>
                 <kbd>Space</kbd> 다음 신호
               </li>
@@ -441,9 +443,13 @@ function Perform({ show, onExit }: { show: Show; onExit: () => void }) {
               <Play size={24} fill="currentColor" aria-hidden="true" /> 공연 시작
             </button>
             <p className="muted gate__note">
-              {loading
-                ? `효과음 준비 중… ${progress!.done}/${progress!.total}`
-                : '누르면 전체 화면이 돼요. 전체 화면을 나가려면 Esc를 길게 누르세요.'}
+              {loading ? (
+                `효과음 준비 중… ${progress!.done}/${progress!.total}`
+              ) : (
+                <>
+                  누르면 전체 화면이 돼요.<span className="key-hint"> 전체 화면을 나가려면 Esc를 길게 누르세요.</span>
+                </>
+              )}
             </p>
             <div className="gate__tools">
               <ThemeToggle />

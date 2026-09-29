@@ -1024,3 +1024,47 @@ select.input option {
   font-weight: 700;
   pointer-events: none;
 }
+
+/* ─── 휴대폰 ─── */
+@media (max-width: 640px) {
+  .app-header__tag {
+    display: none;
+  }
+  .scene__head {
+    flex-wrap: wrap;
+    row-gap: 6px;
+  }
+  /* 장 이름 칸은 둘째 줄 전체 너비로 */
+  .scene__title-wrap {
+    order: 5;
+    flex-basis: 100%;
+  }
+  .scene__count {
+    margin-left: auto;
+  }
+  .scene__drop {
+    padding: var(--space-3);
+  }
+  .inspector {
+    padding: var(--space-4);
+  }
+  .field-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .tile {
+    padding: var(--space-4);
+  }
+  .tile__actions .btn--lg {
+    flex: 1 1 auto;
+    justify-content: center;
+  }
+}
+@media (hover: none) and (pointer: coarse) {
+  .cue-row__handle {
+    width: 40px;
+  }
+  /* 휴대폰·태블릿에서는 파일을 끌어다 놓을 수 없으니 안내를 숨긴다 (신호의 음원 칸을 눌러 고른다) */
+  .scene__hint {
+    display: none;
+  }
+}

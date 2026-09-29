@@ -41,8 +41,9 @@ interface Props {
   onPerform: (showId: string) => void;
 }
 
-/** Chrome·Edge(크로미움)인지. 큐싸인은 이 브라우저들에서 가장 잘 동작한다. */
+/** Chrome·Edge(크로미움)인지. 큐싸인은 이 브라우저들에서 가장 잘 동작한다. 휴대폰·태블릿은 안내하지 않는다. */
 function isChromium(): boolean {
+  if (/Android|iPhone|iPad|iPod/.test(navigator.userAgent) || navigator.maxTouchPoints > 1) return true;
   const brands = (navigator as Navigator & { userAgentData?: { brands: { brand: string }[] } }).userAgentData?.brands;
   if (brands) return brands.some((b) => /Chromium|Google Chrome|Microsoft Edge/.test(b.brand));
   return /Chrome\/|Edg\//.test(navigator.userAgent) && !/OPR\//.test(navigator.userAgent);

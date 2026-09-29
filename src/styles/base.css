@@ -398,3 +398,21 @@ input[type='range'] {
 .theme-toggle.is-compact .theme-toggle__text {
   display: none;
 }
+
+/* ─── 터치 화면(태블릿·휴대폰) ─── */
+@media (hover: none) and (pointer: coarse) {
+  /* 키보드가 없으니 단축키 안내는 숨긴다 */
+  .key-hint {
+    display: none !important;
+  }
+  /* 손가락으로 누르기 쉽게 */
+  .btn--sm {
+    min-height: 40px;
+  }
+  .btn--sm.btn--icon {
+    width: 40px;
+  }
+  .theme-toggle button {
+    min-height: 38px;
+  }
+}

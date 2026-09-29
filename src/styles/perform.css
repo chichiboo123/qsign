@@ -632,3 +632,224 @@
   line-height: 1.6;
   color: var(--text);
 }
+
+/* ═════════ 태블릿·휴대폰 ═════════ */
+
+/* 화면 아래 안전 영역(아이폰 홈 막대 등) */
+.perform__body {
+  padding-bottom: max(var(--space-4), env(safe-area-inset-bottom));
+}
+
+@media (max-width: 640px) {
+  .perform__header {
+    gap: var(--space-2);
+    padding: 6px var(--space-3);
+  }
+  /* 장 이름은 "다음 신호" 카드에도 나오므로 머리줄에서는 뺀다 */
+  .perform__scene {
+    display: none;
+  }
+  .perform__counter {
+    font-size: 18px;
+    padding: 2px 8px;
+  }
+  .perform__counter .eyebrow {
+    display: none;
+  }
+  .perform__body {
+    padding: var(--space-2) var(--space-3) max(var(--space-3), env(safe-area-inset-bottom));
+  }
+  .perform__main {
+    gap: var(--space-2);
+  }
+  .now {
+    padding: 8px 10px 10px;
+    max-height: 30vh;
+  }
+  .now__tools {
+    width: 100%;
+    justify-content: space-between;
+    gap: var(--space-3);
+  }
+  .master input[type='range'] {
+    width: auto;
+    flex: 1;
+    min-width: 70px;
+  }
+  .master {
+    flex: 1;
+  }
+  .level__label {
+    display: none;
+  }
+  .level__seg {
+    width: 5px;
+  }
+  /* 소리 줄을 두 줄로: [종류 이름 상태 멈춤] / [진행 막대 시간] */
+  .voice {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto auto;
+    grid-template-areas:
+      'badge label tag stop'
+      'bar bar time time';
+    column-gap: 8px;
+    row-gap: 4px;
+  }
+  .voice .cue-badge {
+    grid-area: badge;
+  }
+  .voice__label {
+    grid-area: label;
+    max-width: none;
+    font-size: 16px;
+  }
+  .voice__tag {
+    grid-area: tag;
+  }
+  .voice__stop {
+    grid-area: stop;
+  }
+  .voice__bar {
+    grid-area: bar;
+    min-width: 0;
+  }
+  .voice__time {
+    grid-area: time;
+    font-size: 14px;
+  }
+  .voice__remain {
+    display: none;
+  }
+  .next {
+    padding: var(--space-3) var(--space-4);
+    gap: 8px;
+  }
+  .next__what {
+    font-size: 19px;
+    gap: 8px;
+  }
+  .next__after {
+    display: none;
+  }
+  .go {
+    height: 120px;
+    gap: 14px;
+  }
+  .go__text {
+    font-size: 40px;
+  }
+  .perform__hint {
+    display: none;
+  }
+  .perform__prev,
+  .stop-all {
+    flex: 1;
+    justify-content: center;
+    padding: 8px 12px;
+  }
+  .gate__card {
+    padding: var(--space-5) var(--space-4);
+  }
+  .gate__title {
+    font-size: 24px;
+  }
+}
+
+/* 휴대폰 가로: 높이가 낮으므로 두 칸으로 나눈다.
+   왼쪽 = 다음 신호 + [다음] / 오른쪽 = 지금 나오는 소리 + [이전][모두 멈춤] */
+@media (max-height: 520px) and (orientation: landscape) {
+  .perform__header {
+    padding: 4px var(--space-3);
+  }
+  .perform__body {
+    padding: var(--space-2) var(--space-3) max(var(--space-2), env(safe-area-inset-bottom));
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .side {
+    display: none !important;
+  }
+  .perform__main {
+    display: grid;
+    grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) auto;
+    grid-template-areas:
+      'next now'
+      'go bottom';
+    gap: var(--space-2);
+    overflow: hidden;
+  }
+  .now {
+    grid-area: now;
+    max-height: none;
+    min-height: 0;
+  }
+  .next {
+    grid-area: next;
+    min-height: 0;
+    padding: var(--space-3);
+    gap: 6px;
+    overflow: auto;
+  }
+  .next__signal {
+    font-size: 28px;
+  }
+  .next__after,
+  .perform__hint,
+  .level {
+    display: none;
+  }
+  .go {
+    grid-area: go;
+    height: 100%;
+    min-height: 96px;
+    max-height: 130px;
+  }
+  .perform__bottom {
+    grid-area: bottom;
+    align-self: stretch;
+  }
+  .perform__prev,
+  .stop-all {
+    flex: 1;
+    height: 100%;
+    justify-content: center;
+    padding: 8px;
+  }
+  .voice {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      'badge label stop'
+      'bar bar time';
+    column-gap: 6px;
+    row-gap: 4px;
+  }
+  .voice .cue-badge {
+    grid-area: badge;
+  }
+  .voice__label {
+    grid-area: label;
+    max-width: none;
+    font-size: 15px;
+  }
+  .voice__tag,
+  .voice__remain {
+    display: none;
+  }
+  .voice__stop {
+    grid-area: stop;
+  }
+  .voice__bar {
+    grid-area: bar;
+    min-width: 0;
+  }
+  .voice__time {
+    grid-area: time;
+    font-size: 13px;
+  }
+}
+@media (max-width: 480px) {
+  .perform__fs {
+    display: none;
+  }
+}

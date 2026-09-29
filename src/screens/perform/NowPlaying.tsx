@@ -89,6 +89,7 @@ function VoiceRow({ voice }: { voice: VoiceInfo }) {
 
   const meta = CUE_META[voice.cueType];
   const name = voice.label || meta.name;
+  const tag = voice.state === 'fading' ? '작아지는 중' : voice.loop ? '반복 중' : null;
   return (
     <li
       className={`voice ${voice.state === 'fading' ? 'is-fading' : ''}`}
@@ -96,8 +97,7 @@ function VoiceRow({ voice }: { voice: VoiceInfo }) {
     >
       <CueTypeBadge type={voice.cueType} size="sm" />
       <span className="voice__label">{name}</span>
-      {voice.loop && <span className="voice__tag">반복 중</span>}
-      {voice.state === 'fading' && <span className="voice__tag">작아지는 중</span>}
+      {tag && <span className="voice__tag">{tag}</span>}
       <div className="voice__bar" aria-hidden="true">
         <div className="voice__fill" ref={barRef} />
       </div>
