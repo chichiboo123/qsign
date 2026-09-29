@@ -1,45 +1,59 @@
 import './styles/fonts.css';
 import './styles/tokens.css';
 import './styles/base.css';
-import { useEffect } from 'react';
-import { Play } from 'lucide-react';
+import './styles/screens.css';
+import { useEffect, useState } from 'react';
 import { requestPersistOnce } from './storage/quota';
-import { Logo } from './components/Logo';
+import { DialogProvider } from './components/Dialogs';
 import { Footer } from './components/Footer';
-import { CueTypeBadge } from './components/CueTypeBadge';
-import { CUE_TYPE_ORDER } from './types/cueMeta';
+import { HomeScreen } from './screens/home/HomeScreen';
+import { EditorScreen } from './screens/editor/EditorScreen';
+import { PerformScreen } from './screens/perform/PerformScreen';
+
+/**
+ * GitHub Pages에서 새로고침해도 404가 나지 않도록 URL 라우터를 쓰지 않고
+ * 앱 안의 상태로 화면을 바꾼다.
+ */
+export type View = { name: 'home' } | { name: 'editor'; showId: string } | { name: 'perform'; showId: string };
 
 export default function App() {
+  const [view, setView] = useState<View>({ name: 'home' });
+
   useEffect(() => {
     // 브라우저가 음원을 자동으로 지우지 않도록 보관 요청 (첫 실행 때 한 번)
     void requestPersistOnce();
   }, []);
 
+  useEffect(() => {
+    document.documentElement.classList.toggle('is-perform', view.name === 'perform');
+    window.scrollTo(0, 0);
+  }, [view]);
+
   return (
-    <>
+    <DialogProvider>
       <div className="aurora" aria-hidden="true" />
-      <header className="app-header">
-        <Logo height={36} />
-        <span className="eyebrow">Stage Sound Console</span>
-      </header>
-      <main className="page">
-        <section className="panel" style={{ padding: 24, display: 'grid', gap: 16 }}>
-          <span className="eyebrow">Next Signal</span>
-          <p style={{ fontSize: 28, fontWeight: 700 }}>궁금쓰가 “저기 봐!” 라고 외치면</p>
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            {CUE_TYPE_ORDER.map((t) => (
-              <CueTypeBadge key={t} type={t} />
-            ))}
-          </div>
-          <p className="mono muted">01:42 / 03:15</p>
-          <div>
-            <button className="btn btn--primary">
-              <Play size={18} aria-hidden="true" /> 공연 모드로 시작
-            </button>
-          </div>
-        </section>
-      </main>
-      <Footer />
-    </>
+      {view.name === 'home' && (
+        <HomeScreen
+          onOpen={(showId) => setView({ name: 'editor', showId })}
+          onPerform={(showId) => setView({ name: 'perform', showId })}
+        />
+      )}
+      {view.name === 'editor' && (
+        <EditorScreen
+          key={view.showId}
+          showId={view.showId}
+          onBack={() => setView({ name: 'home' })}
+          onPerform={() => setView({ name: 'perform', showId: view.showId })}
+        />
+      )}
+      {view.name === 'perform' && (
+        <PerformScreen
+          key={view.showId}
+          showId={view.showId}
+          onExit={() => setView({ name: 'editor', showId: view.showId })}
+        />
+      )}
+      {view.name !== 'perform' && <Footer />}
+    </DialogProvider>
   );
 }
