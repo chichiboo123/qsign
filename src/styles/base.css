@@ -1,0 +1,357 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  min-height: 100vh;
+  background-color: var(--bg);
+  /* 아주 옅은 도트 그리드 */
+  background-image: radial-gradient(rgba(255, 255, 255, 0.07) 1px, transparent 1px);
+  background-size: 22px 22px;
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  isolation: isolate;
+}
+
+/* 화면 모서리의 희미한 오로라 (시안 → 바이올렛) */
+.aurora {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  overflow: hidden;
+}
+.aurora::before,
+.aurora::after {
+  content: '';
+  position: absolute;
+  width: 60vmax;
+  height: 60vmax;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.16;
+}
+.aurora::before {
+  top: -30vmax;
+  left: -24vmax;
+  background: radial-gradient(circle, var(--accent-from), transparent 65%);
+}
+.aurora::after {
+  bottom: -32vmax;
+  right: -24vmax;
+  background: radial-gradient(circle, var(--accent-to), transparent 65%);
+}
+
+h1,
+h2,
+h3,
+h4,
+p {
+  margin: 0;
+}
+h1,
+h2,
+h3 {
+  line-height: 1.35;
+  font-weight: 700;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+a {
+  color: var(--accent-from);
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent-from);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: rgba(34, 211, 238, 0.35);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ─── 작은 영문 대문자 라벨 ─── */
+.eyebrow {
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.mono {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.muted {
+  color: var(--text-muted);
+}
+
+/* ─── 글래스 패널 ─── */
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  backdrop-filter: blur(var(--blur));
+  -webkit-backdrop-filter: blur(var(--blur));
+}
+
+/* ─── 버튼 ─── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 40px;
+  padding: 8px 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-weight: 600;
+  font-size: 15px;
+  line-height: 1.2;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    background-color var(--dur) var(--ease),
+    border-color var(--dur) var(--ease),
+    box-shadow var(--dur) var(--ease),
+    transform var(--dur-fast) var(--ease);
+}
+.btn:hover:not(:disabled) {
+  background: var(--surface-hover);
+  border-color: var(--border-strong);
+}
+.btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.btn svg {
+  flex: none;
+}
+
+.btn--primary {
+  background: var(--accent-gradient);
+  border-color: transparent;
+  color: var(--on-accent);
+  font-weight: 700;
+}
+.btn--primary:hover:not(:disabled) {
+  background: var(--accent-gradient);
+  border-color: transparent;
+  box-shadow: 0 0 24px rgba(34, 211, 238, 0.28);
+}
+
+.btn--danger {
+  border-color: rgba(244, 63, 94, 0.5);
+  color: #ffd5dc;
+  background: rgba(244, 63, 94, 0.12);
+}
+.btn--danger:hover:not(:disabled) {
+  background: rgba(244, 63, 94, 0.2);
+  border-color: var(--danger);
+}
+
+.btn--ghost {
+  background: transparent;
+  border-color: transparent;
+}
+
+.btn--sm {
+  min-height: 32px;
+  padding: 4px 10px;
+  font-size: 14px;
+  border-radius: var(--radius-sm);
+}
+
+.btn--icon {
+  padding: 0;
+  width: 40px;
+}
+.btn--icon.btn--sm {
+  width: 32px;
+}
+
+/* ─── 입력 ─── */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.field__label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+.input {
+  width: 100%;
+  min-height: 40px;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: rgba(0, 0, 0, 0.35);
+  color: var(--text);
+  font-size: 16px;
+  transition:
+    border-color var(--dur) var(--ease),
+    box-shadow var(--dur) var(--ease);
+}
+.input:focus {
+  outline: none;
+  border-color: var(--accent-from);
+  box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.18);
+}
+.input::placeholder {
+  color: #6b7385;
+}
+textarea.input {
+  resize: vertical;
+  min-height: 64px;
+  line-height: 1.5;
+}
+
+input[type='range'] {
+  accent-color: var(--accent-from);
+  width: 100%;
+}
+
+/* ─── 푸터 ─── */
+.site-footer {
+  margin-top: auto;
+  padding: var(--space-5) var(--space-4);
+  text-align: center;
+}
+.site-footer a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: color var(--dur) var(--ease);
+}
+.site-footer a:hover,
+.site-footer a:focus-visible {
+  color: var(--accent-from);
+}
+
+/* ─── 공연 모드: 끊김 방지를 위해 blur·오로라를 끄고 평면에 가깝게 ─── */
+.is-perform .aurora {
+  display: none;
+}
+.is-perform .panel {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  background: var(--bg-raised);
+}
+
+/* ─── 움직임 줄이기 ─── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ─── 신호 종류 배지 ─── */
+.cue-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 9px 2px 7px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--cue) 45%, transparent);
+  background: color-mix(in srgb, var(--cue) 12%, transparent);
+  color: var(--cue);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+.cue-badge--sm {
+  font-size: 12px;
+  padding: 1px 7px 1px 5px;
+  gap: 4px;
+}
+.cue-badge--lg {
+  font-size: 16px;
+  padding: 4px 12px 4px 10px;
+  gap: 6px;
+}
+
+/* ─── 공통 레이아웃 ─── */
+.app-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-5);
+  max-width: 1280px;
+  width: 100%;
+  margin: 0 auto;
+}
+.app-header__spacer {
+  flex: 1;
+}
+.page {
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 var(--space-5) var(--space-5);
+  flex: 1;
+}
+@media (max-width: 640px) {
+  .app-header,
+  .page {
+    padding-left: var(--space-4);
+    padding-right: var(--space-4);
+  }
+}

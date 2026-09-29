@@ -1,0 +1,4 @@
+/* 모든 글꼴은 npm 패키지에서 번들링되어 dist/assets 안에 함께 배포된다(CDN 사용 안 함). */
+@import 'pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css';
+@import '@fontsource-variable/space-grotesk/wght.css';
+@import '@fontsource-variable/jetbrains-mono/wght.css';
