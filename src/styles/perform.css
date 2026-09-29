@@ -149,18 +149,8 @@
 .voice__bar {
   flex: 1;
   min-width: 60px;
-  height: 8px;
-  border-radius: 999px;
-  background: var(--track);
-  overflow: hidden;
 }
-.voice__fill {
-  height: 100%;
-  background: var(--cue);
-  transform-origin: left center;
-  transform: scaleX(0);
-  box-shadow: 0 0 10px var(--cue);
-}
+
 .voice__time {
   flex: none;
   font-size: 16px;
@@ -549,7 +539,12 @@
 }
 .side-cue.is-playing {
   opacity: 1;
-  box-shadow: inset 3px 0 0 var(--cue);
+  border-color: color-mix(in srgb, var(--cue) 45%, transparent);
+}
+.side-cue__tag--play {
+  background: transparent;
+  color: var(--cue);
+  border: 1px solid var(--cue);
 }
 
 /* ─── 시작 대기 화면 ─── */

@@ -588,6 +588,61 @@ class AudioEngine {
     return v.loop ? e % v.length : Math.min(e, v.length);
   }
 
+  /**
+   * 재생 위치 옮기기 (진행바를 눌러 넘길 때). elapsed = 구간 시작부터의 초.
+   * - 미디어: currentTime만 바꾼다.
+   * - 버퍼: 버퍼 소스는 위치를 바꿀 수 없어서 같은 Gain에 새 소스를 붙여 그 위치부터 다시 튼다.
+   */
+  seek(voiceId: string, elapsed: number) {
+    const v = this.voices.get(voiceId);
+    if (!v || !this.ctx) return;
+    const t = clampTime(elapsed, 0, Math.max(0, v.length - 0.05));
+    const now = this.ctx.currentTime;
+
+    if (v.kind === 'media' && v.el) {
+      v.el.currentTime = v.startAt + t;
+      // 끝 페이드가 이미 걸렸는데 앞으로 돌아가면 소리를 되살린다
+      if (v.tailFading && v.state === 'playing') {
+        v.tailFading = false;
+        this.rampTo(v, v.volume, 0.05);
+      }
+      return;
+    }
+
+    if (v.kind === 'buffer' && v.source) {
+      const old = v.source;
+      old.onended = null;
+      try {
+        old.stop();
+      } catch {
+        /* 이미 멈춤 */
+      }
+      old.disconnect();
+      const src = this.ctx.createBufferSource();
+      src.buffer = old.buffer;
+      src.loop = old.loop;
+      src.loopStart = old.loopStart;
+      src.loopEnd = old.loopEnd;
+      src.connect(v.gain);
+      if (v.loop) src.start(now, v.startAt + t);
+      else src.start(now, v.startAt + t, v.length - t);
+      v.source = src;
+      v.ctxStart = now - t;
+      if (v.state === 'playing') {
+        const g = v.gain.gain;
+        g.cancelScheduledValues(now);
+        g.setValueAtTime(v.volume, now);
+        const remain = v.length - t;
+        if (!v.loop && v.fadeOut > 0) {
+          const fo = Math.min(v.fadeOut, remain);
+          g.setValueAtTime(v.volume, now + remain - fo);
+          g.linearRampToValueAtTime(0, now + remain);
+        }
+      }
+      src.onended = () => this.finish(v.id, v.state === 'fading' ? 'faded' : 'ended');
+    }
+  }
+
   /** 원래 음원 파일 기준 재생 위치(초). 시작 지점을 정할 때 쓴다 */
   getPosition(voiceId: string): number {
     const v = this.voices.get(voiceId);

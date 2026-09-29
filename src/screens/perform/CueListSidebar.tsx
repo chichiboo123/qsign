@@ -62,6 +62,7 @@ export function CueListSidebar({ scenes, flat, cursor, playingCueIds, onPick }: 
                         <span className="sr-only">{meta.name} </span>
                         {cue.label || meta.name}
                       </span>
+                      {playingCueIds.has(cue.id) && <span className="side-cue__tag side-cue__tag--play">재생 중</span>}
                       {i === cursor && <span className="side-cue__tag">다음</span>}
                     </button>
                   </li>

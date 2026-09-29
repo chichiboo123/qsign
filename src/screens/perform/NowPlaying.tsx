@@ -3,6 +3,7 @@ import { Square, Volume2 } from 'lucide-react';
 import { engine, type VoiceInfo } from '../../audio/engine';
 import { useAnimationFrame } from '../../audio/useEngine';
 import { CueTypeBadge } from '../../components/CueTypeBadge';
+import { Seekbar } from '../../components/Seekbar';
 import { LevelMeter } from '../../components/LevelMeter';
 import { CUE_META } from '../../types/cueMeta';
 import { loadSettings, saveSettings } from '../../storage/showStore';
@@ -69,15 +70,14 @@ function MasterVolume() {
 }
 
 function VoiceRow({ voice }: { voice: VoiceInfo }) {
-  const barRef = useRef<HTMLDivElement>(null);
+  const scrub = useRef<number | null>(null);
   const timeRef = useRef<HTMLSpanElement>(null);
   const remainRef = useRef<HTMLSpanElement>(null);
   const last = useRef('');
 
   useAnimationFrame(() => {
-    const e = engine.getElapsed(voice.id);
-    const ratio = voice.length > 0 ? Math.min(1, e / voice.length) : 0;
-    if (barRef.current) barRef.current.style.transform = `scaleX(${ratio})`;
+    // 진행바를 끄는 동안에는 끄는 위치를 보여 준다
+    const e = scrub.current ?? engine.getElapsed(voice.id);
     const t = `${formatTime(e)} / ${formatTime(voice.length)}`;
     if (t !== last.current) {
       last.current = t;
@@ -98,8 +98,8 @@ function VoiceRow({ voice }: { voice: VoiceInfo }) {
       <CueTypeBadge type={voice.cueType} size="sm" />
       <span className="voice__label">{name}</span>
       {tag && <span className="voice__tag">{tag}</span>}
-      <div className="voice__bar" aria-hidden="true">
-        <div className="voice__fill" ref={barRef} />
+      <div className="voice__bar">
+        <Seekbar voiceId={voice.id} length={voice.length} label={name} onScrub={(t) => (scrub.current = t)} />
       </div>
       <span className="voice__time mono" ref={timeRef} />
       {!voice.loop && <span className="voice__remain mono" ref={remainRef} />}

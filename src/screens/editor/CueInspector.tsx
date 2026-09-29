@@ -3,7 +3,8 @@ import { Copy, FileAudio, Headphones, Square, Trash2, Upload, X } from 'lucide-r
 import { DropZone } from '../../components/DropZone';
 import { TimeInput } from '../../components/TimeInput';
 import { engine } from '../../audio/engine';
-import { useAnimationFrame } from '../../audio/useEngine';
+import { useAnimationFrame, useVoices } from '../../audio/useEngine';
+import { Seekbar } from '../../components/Seekbar';
 import { CUE_META, CUE_TYPE_ORDER } from '../../types/cueMeta';
 import { cueHasAudio, type AudioMeta, type Cue, type CueType } from '../../types/show';
 import type { FlatCue } from '../../lib/showOps';
@@ -313,11 +314,10 @@ function PreviewPosition({
   onSetEnd: (t: number) => void;
 }) {
   const timeRef = useRef<HTMLSpanElement>(null);
-  const barRef = useRef<HTMLDivElement>(null);
+  const voice = useVoices().find((v) => v.id === voiceId);
   useAnimationFrame(() => {
     const pos = engine.getPosition(voiceId);
     if (timeRef.current) timeRef.current.textContent = `${formatTime(pos)} / ${formatTime(duration)}`;
-    if (barRef.current) barRef.current.style.transform = `scaleX(${duration > 0 ? Math.min(1, pos / duration) : 0})`;
   });
   const now = () => Math.round(engine.getPosition(voiceId) * 10) / 10;
   return (
@@ -326,9 +326,7 @@ function PreviewPosition({
         <span className="preview-pos__label">듣는 중</span>
         <span className="mono" ref={timeRef} />
       </div>
-      <div className="preview-pos__bar" aria-hidden="true">
-        <div ref={barRef} />
-      </div>
+      {voice && <Seekbar voiceId={voiceId} length={voice.length} label="미리 듣기" />}
       <div className="row-actions">
         <button className="btn btn--sm" onClick={() => onSetStart(now())}>
           지금 위치를 시작 지점으로

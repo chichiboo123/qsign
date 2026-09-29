@@ -665,7 +665,6 @@ kbd {
   gap: 2px;
   border-radius: var(--radius-md);
   border: 1px solid var(--border);
-  border-left: 3px solid var(--cue);
   background: var(--surface);
   transition:
     background-color var(--dur) var(--ease),
@@ -677,7 +676,6 @@ kbd {
 }
 .cue-row.is-selected {
   border-color: color-mix(in srgb, var(--cue) 60%, transparent);
-  border-left-color: var(--cue);
   background: color-mix(in srgb, var(--cue) var(--tint), transparent);
   box-shadow: 0 0 18px color-mix(in srgb, var(--cue) var(--glow), transparent);
 }
@@ -818,11 +816,9 @@ kbd {
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
-  border-top: 3px solid var(--cue, var(--border));
 }
 .inspector.empty {
   min-height: 240px;
-  border-top-width: 1px;
 }
 .inspector__head {
   display: flex;
