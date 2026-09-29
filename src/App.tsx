@@ -1,13 +1,20 @@
 import './styles/fonts.css';
 import './styles/tokens.css';
 import './styles/base.css';
+import { useEffect } from 'react';
 import { Play } from 'lucide-react';
+import { requestPersistOnce } from './storage/quota';
 import { Logo } from './components/Logo';
 import { Footer } from './components/Footer';
 import { CueTypeBadge } from './components/CueTypeBadge';
 import { CUE_TYPE_ORDER } from './types/cueMeta';
 
 export default function App() {
+  useEffect(() => {
+    // 브라우저가 음원을 자동으로 지우지 않도록 보관 요청 (첫 실행 때 한 번)
+    void requestPersistOnce();
+  }, []);
+
   return (
     <>
       <div className="aurora" aria-hidden="true" />
