@@ -11,6 +11,8 @@ interface RowProps {
   cue: Cue;
   number: number;
   audio?: AudioMeta;
+  /** 음원 목록을 다 읽었는지 (읽기 전에는 "음원 없음"을 띄우지 않는다) */
+  audioLoaded?: boolean;
   targetLabel?: string;
   selected?: boolean;
   previewing?: boolean;
@@ -39,6 +41,7 @@ export function CueRow({
   cue,
   number,
   audio,
+  audioLoaded = true,
   targetLabel,
   selected,
   previewing,
@@ -49,7 +52,7 @@ export function CueRow({
 }: RowProps & { handleProps?: Record<string, unknown> }) {
   const meta = CUE_META[cue.type];
   const needsAudio = cueHasAudio(cue.type);
-  const missing = needsAudio && (!cue.audioId || !audio);
+  const missing = needsAudio && audioLoaded && (!cue.audioId || !audio);
   return (
     <div
       className={`cue-row ${selected ? 'is-selected' : ''} ${overlay ? 'is-overlay' : ''}`}
@@ -68,9 +71,9 @@ export function CueRow({
           {cue.signal && <span className="cue-row__signal">{cue.signal}</span>}
           <span className="cue-row__info">
             {needsAudio &&
-              (missing ? (
+              (!audioLoaded ? null : missing ? (
                 <span className="warn">
-                  <AlertTriangle size={13} aria-hidden="true" /> 음원 없음
+                  <AlertTriangle size={14} aria-hidden="true" /> 음원을 넣어 주세요
                 </span>
               ) : (
                 <span className="muted">
@@ -79,7 +82,7 @@ export function CueRow({
               ))}
             {!needsAudio && (
               <span className="muted">
-                대상: {targetLabel ?? '전체 소리'}
+                대상: {targetLabel ?? '나오고 있는 모든 소리'}
                 {cue.type === 'fade' && <> · {cue.fadeOut}초 동안</>}
               </span>
             )}
@@ -90,8 +93,8 @@ export function CueRow({
         <button
           className={`btn btn--sm btn--icon cue-row__preview ${previewing ? 'is-on' : ''}`}
           onClick={onPreview}
-          disabled={missing}
-          aria-label={previewing ? '미리 듣기 멈춤' : '미리 듣기'}
+          disabled={missing || !audio}
+          aria-label={`${pad2(number)}번 ${previewing ? '미리 듣기 멈춤' : '미리 듣기'}`}
           title={previewing ? '미리 듣기 멈춤' : '미리 듣기'}
         >
           {previewing ? <Square size={14} /> : <Headphones size={15} />}

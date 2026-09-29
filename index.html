@@ -7,6 +7,17 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="description" content="큐싸인(Q-sign) — 신호를 보고 소리를 보내는 초등 공연 음향 재생기" />
     <title>큐싸인 Q-sign</title>
+    <script>
+      // 첫 화면이 번쩍이지 않도록 저장된 밝기(없으면 컴퓨터 설정)를 먼저 적용한다
+      (function () {
+        var t = 'system';
+        try {
+          t = (JSON.parse(localStorage.getItem('qsign:settings') || '{}').theme) || 'system';
+        } catch (e) {}
+        if (t !== 'light' && t !== 'dark') t = matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+        document.documentElement.dataset.theme = t;
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

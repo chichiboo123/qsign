@@ -7,7 +7,6 @@ const SEGMENTS = 16;
 /** 마스터 출력 레벨 미터 (AnalyserNode). React 렌더 없이 DOM만 바꾼다. */
 export function LevelMeter() {
   const segRefs = useRef<(HTMLSpanElement | null)[]>([]);
-  const valueRef = useRef<HTMLSpanElement>(null);
   const shown = useRef(0);
   const lastLit = useRef(-1);
 
@@ -21,12 +20,12 @@ export function LevelMeter() {
     if (lit !== lastLit.current) {
       lastLit.current = lit;
       segRefs.current.forEach((el, i) => el?.classList.toggle('is-lit', i < lit));
-      if (valueRef.current) valueRef.current.textContent = db <= -48 ? '-∞' : `${Math.round(db)}`;
     }
   });
 
   return (
-    <div className="level" role="img" aria-label="출력 레벨">
+    <div className="level" role="img" aria-label="지금 나가는 소리 크기">
+      <span className="level__label">소리 크기</span>
       <span className="level__bars" aria-hidden="true">
         {Array.from({ length: SEGMENTS }, (_, i) => (
           <span
@@ -37,9 +36,6 @@ export function LevelMeter() {
             className={`level__seg ${i >= SEGMENTS - 2 ? 'is-hot' : i >= SEGMENTS - 5 ? 'is-warm' : ''}`}
           />
         ))}
-      </span>
-      <span className="level__db mono" aria-hidden="true">
-        <span ref={valueRef}>-∞</span> dB
       </span>
     </div>
   );

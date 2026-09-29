@@ -12,9 +12,10 @@ import {
   type DragStartEvent,
 } from '@dnd-kit/core';
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
-import { ArrowLeft, MousePointerClick, Play, Plus } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, MousePointerClick, Pencil, Play, Plus } from 'lucide-react';
 import { useDialog } from '../../components/Dialogs';
 import { Logo } from '../../components/Logo';
+import { ThemeToggle } from '../../components/ThemeToggle';
 import { createCue, createScene, loadShow, saveShow, StorageFullError } from '../../storage/showStore';
 import { addAudioFile } from '../../storage/audioStore';
 import { releaseAudio } from '../../storage/cleanup';
@@ -43,11 +44,13 @@ import { CueRow } from './CueRow';
 
 interface Props {
   showId: string;
+  /** 방금 만든 공연이면 제목 칸에 바로 초점 */
+  isNew?: boolean;
   onBack: () => void;
   onPerform: () => void;
 }
 
-export function EditorScreen({ showId, onBack, onPerform }: Props) {
+export function EditorScreen({ showId, isNew, onBack, onPerform }: Props) {
   const initial = useMemo(() => loadShow(showId), [showId]);
   if (!initial) {
     return (
@@ -61,10 +64,20 @@ export function EditorScreen({ showId, onBack, onPerform }: Props) {
       </main>
     );
   }
-  return <Editor initial={initial} onBack={onBack} onPerform={onPerform} />;
+  return <Editor initial={initial} isNew={!!isNew} onBack={onBack} onPerform={onPerform} />;
 }
 
-function Editor({ initial, onBack, onPerform }: { initial: Show; onBack: () => void; onPerform: () => void }) {
+function Editor({
+  initial,
+  isNew,
+  onBack,
+  onPerform,
+}: {
+  initial: Show;
+  isNew: boolean;
+  onBack: () => void;
+  onPerform: () => void;
+}) {
   const { confirm, toast } = useDialog();
   const lib = useAudioLibrary();
   const voices = useVoices();
@@ -74,6 +87,18 @@ function Editor({ initial, onBack, onPerform }: { initial: Show; onBack: () => v
   const [selectedId, setSelectedId] = useState<string | null>(initial.scenes[0]?.cues[0]?.id ?? null);
   const [uploadingCueId, setUploadingCueId] = useState<string | null>(null);
   const [bulkUploading, setBulkUploading] = useState(0);
+  /** 새로 만든 신호: 이름 칸에 초점을 주고 목록에서 보이게 스크롤 */
+  const [freshCueId, setFreshCueId] = useState<string | null>(null);
+  const [savedAt, setSavedAt] = useState<number | null>(null);
+  const titleRef = useRef<HTMLInputElement>(null);
+  const sideRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    if (isNew) {
+      titleRef.current?.focus();
+      titleRef.current?.select();
+    }
+  }, [isNew]);
 
   /** 화면만 바꾸기 (드래그 중) */
   const setLocal = useCallback((next: Show) => {
@@ -88,6 +113,7 @@ function Editor({ initial, onBack, onPerform }: { initial: Show; onBack: () => v
       try {
         const saved = saveShow(next);
         setLocal(saved);
+        setSavedAt(Date.now());
         return saved;
       } catch (e) {
         toast(e instanceof StorageFullError ? e.message : '저장하지 못했어요.', 'error');
@@ -103,7 +129,27 @@ function Editor({ initial, onBack, onPerform }: { initial: Show; onBack: () => v
   const flat = useMemo(() => flattenCues(show), [show]);
   const selected = selectedId ? flat.find((f) => f.cue.id === selectedId) : undefined;
   const targets = useMemo(() => flat.filter((f) => cueHasAudio(f.cue.type)), [flat]);
-  const previewingIds = useMemo(() => new Set(voices.filter((v) => v.preview).map((v) => v.cueId)), [voices]);
+  const previewVoiceOf = useMemo(
+    () => new Map(voices.filter((v) => v.preview).map((v) => [v.cueId, v.id])),
+    [voices],
+  );
+  const previewingIds = useMemo(() => new Set(previewVoiceOf.keys()), [previewVoiceOf]);
+
+  // 새 신호가 목록에서 보이게
+  useEffect(() => {
+    if (!freshCueId) return;
+    const row = document.querySelector('.cue-row.is-selected');
+    row?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }, [freshCueId]);
+
+  /** 신호 고르기. 좁은 화면에서는 설정 패널이 목록 아래에 있으므로 그쪽으로 옮겨 준다 */
+  const selectCue = (cueId: string) => {
+    setSelectedId(cueId);
+    setFreshCueId(null);
+    if (window.matchMedia('(max-width: 980px)').matches) {
+      requestAnimationFrame(() => sideRef.current?.scrollIntoView({ block: 'start', behavior: 'smooth' }));
+    }
+  };
 
   const cueLabel = useCallback(
     (cueId: string) => {
@@ -183,10 +229,25 @@ function Editor({ initial, onBack, onPerform }: { initial: Show; onBack: () => v
   // ─── 신호 ───
 
   const addNewCue = (sceneId: string, type: CueType) => {
-    const cue = createCue(type);
+    // 줄이기·멈춤은 이름을 미리 붙여 둔다
+    const cue = createCue(type, { label: cueHasAudio(type) ? '' : CUE_META[type].name });
     // 선택한 신호가 이 장에 있으면 그 아래에 넣는다
     const after = selected && selected.scene.id === sceneId ? selected.cue.id : undefined;
-    if (mutate((s) => addCue(s, sceneId, cue, after))) setSelectedId(cue.id);
+    if (mutate((s) => addCue(s, sceneId, cue, after))) {
+      setSelectedId(cue.id);
+      setFreshCueId(cue.id);
+    }
+  };
+
+  const duplicateCue = (cue: Cue) => {
+    const f = findCue(showRef.current, cue.id);
+    if (!f) return;
+    const copy: Cue = { ...cue, id: createCue(cue.type).id };
+    if (mutate((s) => addCue(s, f.scene.id, copy, cue.id))) {
+      setSelectedId(copy.id);
+      setFreshCueId(copy.id);
+      toast('같은 신호를 바로 아래에 하나 더 만들었어요.', 'success');
+    }
   };
 
   const changeCue = (cueId: string, patch: Partial<Cue>) => {
@@ -379,26 +440,46 @@ function Editor({ initial, onBack, onPerform }: { initial: Show; onBack: () => v
 
   return (
     <>
-      <header className="app-header editor-header">
-        <button className="btn btn--ghost btn--sm" onClick={onBack}>
-          <ArrowLeft size={16} aria-hidden="true" /> 공연 목록
-        </button>
-        <Logo height={26} />
-        <input
-          className="title-input"
-          value={show.title}
-          onChange={(e) => mutate((s) => ({ ...s, title: e.target.value }))}
-          onBlur={() => !show.title.trim() && mutate((s) => ({ ...s, title: '이름 없는 공연' }))}
-          aria-label="공연 제목"
-          placeholder="공연 제목"
-        />
-        <span className="app-header__spacer" />
-        <span className="muted small editor-header__count">
-          {show.scenes.length}개 장 · 신호 {flat.length}개
-        </span>
-        <button className="btn btn--primary" onClick={startPerform} disabled={flat.length === 0}>
-          <Play size={18} aria-hidden="true" /> 공연 모드로 시작
-        </button>
+      <header className="editor-header">
+        <div className="editor-header__inner">
+          <button className="btn btn--ghost btn--sm" onClick={onBack}>
+            <ArrowLeft size={16} aria-hidden="true" /> 공연 목록
+          </button>
+          <Logo height={24} />
+          <label className="title-wrap" title="눌러서 공연 제목 바꾸기">
+            <input
+              ref={titleRef}
+              className="title-input"
+              value={show.title}
+              onChange={(e) => mutate((s) => ({ ...s, title: e.target.value }))}
+              onBlur={() => !show.title.trim() && mutate((s) => ({ ...s, title: '이름 없는 공연' }))}
+              aria-label="공연 제목"
+              placeholder="공연 제목"
+            />
+            <Pencil size={15} aria-hidden="true" className="title-wrap__pencil" />
+          </label>
+          <span className="app-header__spacer" />
+          <span className="saved small" aria-live="polite">
+            {savedAt ? (
+              <>
+                <CheckCircle2 size={15} aria-hidden="true" /> 자동 저장됨
+              </>
+            ) : (
+              <>
+                {show.scenes.length}개 장 · 신호 {flat.length}개
+              </>
+            )}
+          </span>
+          <ThemeToggle compact />
+          <button
+            className="btn btn--primary"
+            onClick={startPerform}
+            disabled={flat.length === 0}
+            title={flat.length === 0 ? '신호를 하나 이상 만들어야 시작할 수 있어요' : undefined}
+          >
+            <Play size={18} aria-hidden="true" /> 공연 모드로 시작
+          </button>
+        </div>
       </header>
 
       <main className="page editor">
@@ -424,10 +505,11 @@ function Editor({ initial, onBack, onPerform }: { initial: Show; onBack: () => v
                 sceneCount={show.scenes.length}
                 firstNumber={firstNumbers[i]}
                 audioMap={lib.map}
+                audioLoaded={lib.loaded}
                 cueLabel={cueLabel}
                 selectedId={selectedId}
                 previewingIds={previewingIds}
-                onSelect={setSelectedId}
+                onSelect={selectCue}
                 onPreview={preview}
                 onRename={(title) => mutate((s) => updateScene(s, scene.id, { title }))}
                 onMove={(d) => mutate((s) => moveScene(s, scene.id, d))}
@@ -453,28 +535,43 @@ function Editor({ initial, onBack, onPerform }: { initial: Show; onBack: () => v
           </button>
         </div>
 
-        <aside className="editor__side">
+        <aside className="editor__side" ref={sideRef}>
           {selected ? (
             <CueInspector
               key={selected.cue.id}
               cue={selected.cue}
               number={selected.index + 1}
               audio={selected.cue.audioId ? lib.map.get(selected.cue.audioId) : undefined}
+              audioLoaded={lib.loaded}
               targets={targets.filter((t) => t.cue.id !== selected.cue.id)}
-              previewing={previewingIds.has(selected.cue.id)}
+              previewVoiceId={previewVoiceOf.get(selected.cue.id)}
               uploading={uploadingCueId === selected.cue.id}
+              focusLabel={freshCueId === selected.cue.id}
               onChange={(patch) => changeCue(selected.cue.id, patch)}
               onChangeType={(t) => changeType(selected.cue, t)}
               onFile={(file) => setCueAudio(selected.cue.id, file)}
               onRejectFiles={rejectFiles}
               onRemoveAudio={() => removeCueAudio(selected.cue.id)}
               onPreview={() => preview(selected.cue.id)}
+              onDuplicate={() => duplicateCue(selected.cue)}
               onDelete={() => deleteCue(selected.cue)}
             />
           ) : (
             <div className="inspector panel empty">
               <MousePointerClick size={28} aria-hidden="true" />
-              <p>왼쪽에서 신호를 고르면 여기서 자세히 고칠 수 있어요.</p>
+              {flat.length === 0 ? (
+                <ol className="steps steps--big">
+                  <li>
+                    왼쪽 장에서 <strong>[신호 추가]</strong>를 눌러요.
+                  </li>
+                  <li>음원 파일을 끌어다 놓아요. (여러 개를 한꺼번에 놓아도 돼요)</li>
+                  <li>
+                    다 되면 위의 <strong>[공연 모드로 시작]</strong>을 눌러요.
+                  </li>
+                </ol>
+              ) : (
+                <p>목록에서 신호를 누르면 여기서 자세히 고칠 수 있어요.</p>
+              )}
             </div>
           )}
         </aside>

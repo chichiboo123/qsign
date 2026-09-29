@@ -1,6 +1,6 @@
 import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { ChevronDown, ChevronUp, Trash2, Upload } from 'lucide-react';
+import { ChevronDown, ChevronUp, Pencil, Trash2, Upload } from 'lucide-react';
 import { DropZone } from '../../components/DropZone';
 import { AddCueMenu } from './AddCueMenu';
 import { SortableCueRow } from './CueRow';
@@ -13,6 +13,7 @@ interface Props {
   /** 이 장 첫 신호의 전체 번호 (1부터) */
   firstNumber: number;
   audioMap: Map<string, AudioMeta>;
+  audioLoaded: boolean;
   cueLabel: (cueId: string) => string | undefined;
   selectedId: string | null;
   previewingIds: Set<string>;
@@ -32,6 +33,7 @@ export function SceneBlock({
   sceneCount,
   firstNumber,
   audioMap,
+  audioLoaded,
   cueLabel,
   selectedId,
   previewingIds,
@@ -51,13 +53,16 @@ export function SceneBlock({
       <DropZone onFiles={onDropFiles} onReject={onRejectFiles} multiple clickable={false} className="scene__drop">
         <header className="scene__head">
           <span className="eyebrow scene__no">Scene {String(sceneIndex + 1).padStart(2, '0')}</span>
-          <input
-            className="scene__title"
-            value={scene.title}
-            placeholder="장 이름 (예: 2장 · 몰라정류장)"
-            onChange={(e) => onRename(e.target.value)}
-            aria-label="장 이름"
-          />
+          <label className="scene__title-wrap">
+            <input
+              className="scene__title"
+              value={scene.title}
+              placeholder="장 이름 (예: 2장 · 몰라정류장)"
+              onChange={(e) => onRename(e.target.value)}
+              aria-label="장 이름"
+            />
+            <Pencil size={14} aria-hidden="true" className="scene__pencil" />
+          </label>
           <span className="scene__count muted small">신호 {scene.cues.length}개</span>
           <div className="scene__tools">
             <button
@@ -78,8 +83,8 @@ export function SceneBlock({
             >
               <ChevronDown size={18} />
             </button>
-            <button className="btn btn--sm btn--icon btn--ghost" onClick={onDelete} aria-label="장 지우기" title="장 지우기">
-              <Trash2 size={16} />
+            <button className="btn btn--sm btn--ghost btn--danger-text" onClick={onDelete} title="이 장 지우기">
+              <Trash2 size={15} aria-hidden="true" /> <span className="hide-sm">장 지우기</span>
             </button>
           </div>
         </header>
@@ -92,6 +97,7 @@ export function SceneBlock({
                 cue={cue}
                 number={firstNumber + i}
                 audio={cue.audioId ? audioMap.get(cue.audioId) : undefined}
+                audioLoaded={audioLoaded}
                 targetLabel={cue.targetCueId ? cueLabel(cue.targetCueId) : undefined}
                 selected={cue.id === selectedId}
                 previewing={previewingIds.has(cue.id)}
@@ -99,7 +105,11 @@ export function SceneBlock({
                 onPreview={() => onPreview(cue.id)}
               />
             ))}
-            {scene.cues.length === 0 && <li className="cue-list__empty muted small">신호를 추가하거나 여기로 끌어 오세요.</li>}
+            {scene.cues.length === 0 && (
+              <li className="cue-list__empty muted small">
+                아직 신호가 없어요. 아래 [신호 추가]를 누르거나 음원 파일을 여기에 끌어다 놓으세요.
+              </li>
+            )}
           </ul>
         </SortableContext>
 

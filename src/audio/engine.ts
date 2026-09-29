@@ -588,6 +588,13 @@ class AudioEngine {
     return v.loop ? e % v.length : Math.min(e, v.length);
   }
 
+  /** 원래 음원 파일 기준 재생 위치(초). 시작 지점을 정할 때 쓴다 */
+  getPosition(voiceId: string): number {
+    const v = this.voices.get(voiceId);
+    if (!v) return 0;
+    return v.startAt + this.getElapsed(voiceId);
+  }
+
   /** 마스터 출력 레벨 (0~1, 피크) */
   getLevel(): number {
     if (!this.analyser || !this.levelData) return 0;

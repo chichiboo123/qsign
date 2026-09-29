@@ -1,23 +1,26 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
-import { ArrowRight, ChevronLeft, LogOut, Maximize, Play, Square } from 'lucide-react';
+import { AlertTriangle, ChevronLeft, CircleHelp, LogOut, Maximize, Minimize, Play, RotateCcw, Square } from 'lucide-react';
 import { engine } from '../../audio/engine';
 import { preloadAhead, preloadBuffers, runCue } from '../../audio/cueRunner';
 import { useVoices } from '../../audio/useEngine';
 import { useDialog } from '../../components/Dialogs';
 import { Logo } from '../../components/Logo';
 import { CueTypeBadge } from '../../components/CueTypeBadge';
+import { ThemeToggle } from '../../components/ThemeToggle';
 import { useAudioLibrary } from '../../hooks/useAudioLibrary';
 import { enterFullscreen, exitFullscreen, useBeforeUnload, useWakeLock } from '../../hooks/usePerformGuards';
 import { flattenCues } from '../../lib/showOps';
 import { loadShow } from '../../storage/showStore';
 import { CUE_META } from '../../types/cueMeta';
-import type { Show } from '../../types/show';
+import { cueHasAudio, type Show } from '../../types/show';
 import { pad2 } from '../../utils/format';
 import { NowPlaying } from './NowPlaying';
 import { CueListSidebar } from './CueListSidebar';
 
 /** 다음 실행 후 입력을 무시하는 시간 (연타 방지) */
 const GO_LOCK_MS = 500;
+/** 브라우저 "뒤로"를 눌렀을 때 App이 보내는 신호 */
+export const REQUEST_EXIT_EVENT = 'qsign:request-exit';
 
 interface Props {
   showId: string;
@@ -41,10 +44,21 @@ export function PerformScreen({ showId, onExit }: Props) {
   return <Perform show={show} onExit={onExit} />;
 }
 
+function useIsFullscreen() {
+  const [fs, setFs] = useState(!!document.fullscreenElement);
+  useEffect(() => {
+    const on = () => setFs(!!document.fullscreenElement);
+    document.addEventListener('fullscreenchange', on);
+    return () => document.removeEventListener('fullscreenchange', on);
+  }, []);
+  return fs;
+}
+
 function Perform({ show, onExit }: { show: Show; onExit: () => void }) {
-  const { confirm, toast } = useDialog();
+  const { confirm, alert, toast } = useDialog();
   const lib = useAudioLibrary();
   const voices = useVoices();
+  const isFullscreen = useIsFullscreen();
   const flat = useMemo(() => flattenCues(show), [show]);
   const cues = useMemo(() => flat.map((f) => f.cue), [flat]);
   const lookup = useCallback((id: string) => lib.map.get(id), [lib.map]);
@@ -86,6 +100,14 @@ function Perform({ show, onExit }: { show: Show; onExit: () => void }) {
     [],
   );
 
+  const missing = useMemo(
+    () =>
+      lib.loaded
+        ? flat.filter((f) => cueHasAudio(f.cue.type) && (!f.cue.audioId || !lib.map.has(f.cue.audioId)))
+        : [],
+    [flat, lib.loaded, lib.map],
+  );
+
   const start = async () => {
     if (!lib.loaded) return;
     await engine.resume();
@@ -114,9 +136,17 @@ function Perform({ show, onExit }: { show: Show; onExit: () => void }) {
     else void r.then(report);
   }, [cues, lookup, toast]);
 
-  const prev = useCallback(() => {
-    setCursor((c) => Math.max(0, c - 1));
-  }, []);
+  /** 소리 없이 순서만 옮긴다 */
+  const moveTo = useCallback(
+    (i: number) => {
+      const next = Math.max(0, Math.min(cues.length, i));
+      cursorRef.current = next;
+      setCursor(next);
+    },
+    [cues.length],
+  );
+
+  const prev = useCallback(() => moveTo(cursorRef.current - 1), [moveTo]);
 
   const stopAll = useCallback(() => {
     const mode = engine.stopAll();
@@ -128,15 +158,67 @@ function Perform({ show, onExit }: { show: Show; onExit: () => void }) {
     }
   }, []);
 
+  const exit = useCallback(async () => {
+    const ok = await confirm({
+      title: '준비 모드로 돌아갈까요?',
+      message: <p>공연 모드를 끝내요. 지금 나오는 소리는 모두 멈춰요.</p>,
+      confirmLabel: '준비 모드로',
+      cancelLabel: '공연 계속하기',
+      danger: true,
+    });
+    if (ok) onExit();
+  }, [confirm, onExit]);
+
+  const showHelp = useCallback(() => {
+    void alert({
+      title: '이렇게 하면 돼요',
+      wide: true,
+      message: (
+        <ol className="help-list">
+          <li>
+            대사를 잘 듣다가 <strong>신호 대사</strong>가 나오면 <strong>[다음]</strong> 버튼이나 <kbd>Space</kbd>를
+            눌러요.
+          </li>
+          <li>
+            소리가 잘못 나오면 <strong>[모두 멈춤]</strong>이나 <kbd>Esc</kbd>를 눌러요. 2초 동안 작아지다가 꺼져요.
+            한 번 더 누르면 바로 꺼져요.
+          </li>
+          <li>
+            소리 하나만 끄고 싶으면 그 소리 옆의 <strong>[멈춤]</strong>을 눌러요.
+          </li>
+          <li>
+            순서가 틀렸으면 <strong>[이전]</strong>이나 <kbd>←</kbd>로 돌아가요. 오른쪽 목록에서 신호를 눌러 옮길 수도
+            있어요. 이때는 소리가 나지 않아요.
+          </li>
+          <li>
+            전체 화면을 나가려면 <kbd>Esc</kbd>를 <strong>길게</strong> 누르세요.
+          </li>
+        </ol>
+      ),
+    });
+  }, [alert]);
+
+  // 브라우저 "뒤로" → 확인창
+  useEffect(() => {
+    const on = () => void exit();
+    window.addEventListener(REQUEST_EXIT_EVENT, on);
+    return () => window.removeEventListener(REQUEST_EXIT_EVENT, on);
+  }, [exit]);
+
   // 키보드: Space = 다음, Esc = 모두 멈춤, ← = 이전
+  const startRef = useRef(start);
+  startRef.current = start;
   useEffect(() => {
     const dialogOpen = () => !!document.querySelector('.modal-backdrop');
     const onDown = (e: KeyboardEvent) => {
       if (dialogOpen() || e.ctrlKey || e.metaKey || e.altKey) return;
       if (!started) {
-        if (e.code === 'Space' || e.key === 'Enter') {
+        // 대기 화면의 다른 버튼(도움말 등)에 초점이 있으면 그 버튼이 동작하게 둔다
+        const el = document.activeElement;
+        const onOther = el instanceof HTMLButtonElement && !el.classList.contains('gate__start');
+        if (!onOther && (e.code === 'Space' || e.key === 'Enter')) {
           e.preventDefault();
-          void start();
+          void startRef.current();
         }
         return;
       }
@@ -161,44 +243,58 @@ function Perform({ show, onExit }: { show: Show; onExit: () => void }) {
       window.removeEventListener('keydown', onDown);
       window.removeEventListener('keyup', onUp);
     };
-    // start는 렌더마다 새로 만들어지지만 하는 일은 같아서 의존성에서 뺀다
   }, [started, go, stopAll, prev]);
-
-  const exit = async () => {
-    const ok = await confirm({
-      title: '준비 모드로 돌아갈까요?',
-      message: <p>공연 모드를 끝내요. 지금 나오는 소리는 모두 멈춰요.</p>,
-      confirmLabel: '준비 모드로',
-      danger: true,
-    });
-    if (ok) onExit();
-  };
 
   const next = flat[cursor];
   const after = flat[cursor + 1];
   const sceneTitle = (next ?? flat[flat.length - 1])?.scene.title ?? '';
   const playingCueIds = useMemo(() => new Set(voices.filter((v) => !v.preview).map((v) => v.cueId)), [voices]);
   const ended = cursor >= flat.length;
-  const nextMissing =
-    next && ['music', 'sfx', 'bgm'].includes(next.cue.type) && lib.loaded && (!next.cue.audioId || !lib.map.has(next.cue.audioId));
-
+  const nextMissing = !!next && missing.some((m) => m.cue.id === next.cue.id);
   const loading = progress && progress.done < progress.total;
+
+  /** 버튼을 마우스로 누른 뒤 초점을 풀어 Space가 버튼을 다시 누르지 않게 */
+  const blur = (e: React.MouseEvent<HTMLButtonElement>) => e.currentTarget.blur();
 
   return (
     <div className="perform">
       <header className="perform__header">
-        <Logo height={26} />
+        <Logo height={24} />
         <span className="perform__scene">{sceneTitle}</span>
-        <span className="perform__counter mono">
+        <span className="perform__counter mono" aria-label={`신호 ${cursor + 1}번째, 전체 ${flat.length}개`}>
           <span className="eyebrow">Signal</span> {pad2(Math.min(cursor + 1, flat.length))}
           <span className="muted">/{pad2(flat.length)}</span>
         </span>
         <span className="app-header__spacer" />
-        <button className="btn btn--sm btn--ghost" onClick={() => void enterFullscreen()} title="전체 화면">
-          <Maximize size={16} aria-hidden="true" />
-          <span className="hide-sm">전체 화면</span>
+        <button
+          className="btn btn--sm btn--ghost"
+          onClick={(e) => {
+            showHelp();
+            blur(e);
+          }}
+        >
+          <CircleHelp size={17} aria-hidden="true" />
+          <span className="hide-md">도움말</span>
         </button>
-        <button className="btn btn--sm" onClick={exit}>
+        <ThemeToggle compact />
+        <button
+          className="btn btn--sm btn--ghost"
+          onClick={(e) => {
+            void (isFullscreen ? exitFullscreen() : enterFullscreen());
+            blur(e);
+          }}
+          aria-label={isFullscreen ? '전체 화면 끝내기' : '전체 화면'}
+        >
+          {isFullscreen ? <Minimize size={16} aria-hidden="true" /> : <Maximize size={16} aria-hidden="true" />}
+          <span className="hide-md">{isFullscreen ? '전체 화면 끝' : '전체 화면'}</span>
+        </button>
+        <button
+          className="btn btn--sm"
+          onClick={(e) => {
+            void exit();
+            blur(e);
+          }}
+        >
           <LogOut size={16} aria-hidden="true" /> 준비 모드로
         </button>
       </header>
@@ -214,29 +310,44 @@ function Perform({ show, onExit }: { show: Show; onExit: () => void }) {
           >
             {ended ? (
               <div className="next__end">
-                <span className="eyebrow">End of Show</span>
+                <span className="eyebrow">End of Show · 공연 끝</span>
                 <p className="next__signal">마지막 신호까지 끝났어요. 수고했어요!</p>
-                <p className="muted">
-                  <kbd>←</kbd> 키로 앞 신호로 돌아갈 수 있어요.
-                </p>
+                <div className="next__end-actions">
+                  <button
+                    className="btn"
+                    onClick={(e) => {
+                      moveTo(0);
+                      blur(e);
+                    }}
+                  >
+                    <RotateCcw size={18} aria-hidden="true" /> 처음부터 다시
+                  </button>
+                  <span className="muted">
+                    <kbd>←</kbd> 키로 앞 신호로 돌아갈 수도 있어요.
+                  </span>
+                </div>
               </div>
             ) : (
               <>
                 <div className="next__top">
-                  <span className="eyebrow">Next Signal · {pad2(cursor + 1)}</span>
-                  {next.scene.title && <span className="next__scene muted">{next.scene.title}</span>}
+                  <span className="eyebrow">Next Signal · 다음 신호 {pad2(cursor + 1)}</span>
+                  {next.scene.title && <span className="next__scene">{next.scene.title}</span>}
                 </div>
                 <p className={`next__signal ${next.cue.signal ? '' : 'is-empty'}`}>
                   {next.cue.signal || '신호 대사가 없어요. 선생님 신호를 보고 누르세요.'}
                 </p>
                 <div className="next__what">
-                  <ArrowRight size={22} aria-hidden="true" className="next__arrow" />
+                  <span className="next__press">누르면</span>
                   <CueTypeBadge type={next.cue.type} size="lg" />
                   <span className="next__label">{next.cue.label || CUE_META[next.cue.type].name}</span>
-                  {nextMissing && <span className="warn">음원 없음</span>}
+                  {nextMissing && (
+                    <span className="warn">
+                      <AlertTriangle size={16} aria-hidden="true" /> 음원 없음
+                    </span>
+                  )}
                 </div>
                 {after && (
-                  <p className="next__after muted">
+                  <p className="next__after">
                     그다음 {pad2(cursor + 2)} · {CUE_META[after.cue.type].name} · {after.cue.label || '(이름 없음)'}
                   </p>
                 )}
@@ -249,7 +360,7 @@ function Perform({ show, onExit }: { show: Show; onExit: () => void }) {
             className={`go ${locked ? 'is-locked' : ''} ${pulse > 0 ? 'is-pulse' : ''}`}
             onClick={(e) => {
               go();
-              e.currentTarget.blur();
+              blur(e);
             }}
             disabled={ended}
             aria-label="다음 신호 실행 (스페이스바)"
@@ -265,39 +376,56 @@ function Perform({ show, onExit }: { show: Show; onExit: () => void }) {
               className="btn perform__prev"
               onClick={(e) => {
                 prev();
-                e.currentTarget.blur();
+                blur(e);
               }}
               disabled={cursor === 0}
             >
-              <ChevronLeft size={20} aria-hidden="true" /> 이전 <kbd>←</kbd>
+              <ChevronLeft size={22} aria-hidden="true" /> 이전 <kbd>←</kbd>
             </button>
-            <span className="perform__hint muted small">
-              {stoppingAll ? '2초 동안 줄이는 중이에요. 한 번 더 누르면 바로 멈춰요.' : '이전은 소리를 내지 않고 순서만 옮겨요.'}
+            <span className={`perform__hint ${stoppingAll ? 'is-alert' : ''}`}>
+              {stoppingAll
+                ? '소리를 2초 동안 줄이는 중이에요. 한 번 더 누르면 바로 꺼져요.'
+                : '[이전]은 소리 없이 순서만 앞으로 옮겨요.'}
             </span>
             <button
               className={`btn stop-all ${stoppingAll ? 'is-stopping' : ''}`}
               onClick={(e) => {
                 stopAll();
-                e.currentTarget.blur();
+                blur(e);
               }}
             >
-              <Square size={18} fill="currentColor" aria-hidden="true" />
+              <Square size={20} fill="currentColor" aria-hidden="true" />
               {stoppingAll ? '바로 멈춤' : '모두 멈춤'} <kbd>ESC</kbd>
             </button>
           </div>
         </main>
 
-        <CueListSidebar scenes={show.scenes} flat={flat} cursor={cursor} playingCueIds={playingCueIds} />
+        <CueListSidebar
+          scenes={show.scenes}
+          flat={flat}
+          cursor={cursor}
+          playingCueIds={playingCueIds}
+          onPick={(i) => moveTo(i)}
+        />
       </div>
 
       {!started && (
         <div className="gate">
           <div className="gate__card panel">
-            <span className="eyebrow">Stand By</span>
+            <span className="eyebrow">Stand By · 준비</span>
             <h1 className="gate__title">{show.title}</h1>
             <p className="muted">
               {show.scenes.length}개 장 · 신호 {flat.length}개
             </p>
+            {missing.length > 0 && (
+              <p className="gate__warn">
+                <AlertTriangle size={18} aria-hidden="true" />
+                <span>
+                  {missing.map((m) => pad2(m.index + 1)).join(', ')}번 신호에 음원이 없어요. 이 신호에서는 소리가 나지
+                  않아요.
+                </span>
+              </p>
+            )}
             <ul className="gate__keys">
               <li>
                 <kbd>Space</kbd> 다음 신호
@@ -310,13 +438,22 @@ function Perform({ show, onExit }: { show: Show; onExit: () => void }) {
               </li>
             </ul>
             <button className="btn btn--primary gate__start" onClick={() => void start()} disabled={!lib.loaded} autoFocus>
-              <Play size={22} fill="currentColor" aria-hidden="true" /> 공연 시작
+              <Play size={24} fill="currentColor" aria-hidden="true" /> 공연 시작
             </button>
-            <p className="muted small gate__note">
+            <p className="muted gate__note">
               {loading
                 ? `효과음 준비 중… ${progress!.done}/${progress!.total}`
                 : '누르면 전체 화면이 돼요. 전체 화면을 나가려면 Esc를 길게 누르세요.'}
             </p>
+            <div className="gate__tools">
+              <ThemeToggle />
+              <button className="btn btn--sm btn--ghost" onClick={showHelp}>
+                <CircleHelp size={16} aria-hidden="true" /> 도움말
+              </button>
+              <button className="btn btn--sm btn--ghost" onClick={onExit}>
+                <LogOut size={16} aria-hidden="true" /> 준비 모드로
+              </button>
+            </div>
           </div>
         </div>
       )}

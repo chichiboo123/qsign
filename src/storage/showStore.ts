@@ -220,14 +220,18 @@ export function audioIdsOf(show: Show): Set<string> {
 
 // ─── 설정 ───
 
+export type ThemeChoice = 'light' | 'dark' | 'system';
+
 export interface Settings {
   /** 마스터 볼륨 0~1 */
   masterVolume: number;
   /** navigator.storage.persist()를 이미 요청했는지 */
   persistRequested: boolean;
+  /** 화면 밝기. system이면 컴퓨터 설정을 따른다 */
+  theme: ThemeChoice;
 }
 
-const DEFAULT_SETTINGS: Settings = { masterVolume: 1, persistRequested: false };
+const DEFAULT_SETTINGS: Settings = { masterVolume: 1, persistRequested: false, theme: 'system' };
 
 export function loadSettings(): Settings {
   return { ...DEFAULT_SETTINGS, ...(readJSON<Partial<Settings>>(KEY_SETTINGS) ?? {}) };
