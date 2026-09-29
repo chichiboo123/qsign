@@ -12,10 +12,11 @@ import {
   type DragStartEvent,
 } from '@dnd-kit/core';
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
-import { ArrowLeft, CheckCircle2, MousePointerClick, Pencil, Play, Plus } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, CircleHelp, MousePointerClick, Pencil, Play, Plus } from 'lucide-react';
 import { useDialog } from '../../components/Dialogs';
 import { Logo } from '../../components/Logo';
 import { ThemeToggle } from '../../components/ThemeToggle';
+import { HelpModal } from '../../components/HelpModal';
 import { createCue, createScene, loadShow, saveShow, StorageFullError } from '../../storage/showStore';
 import { addAudioFile } from '../../storage/audioStore';
 import { releaseAudio } from '../../storage/cleanup';
@@ -55,7 +56,7 @@ export function EditorScreen({ showId, isNew, onBack, onPerform }: Props) {
   if (!initial) {
     return (
       <main className="page">
-        <div className="panel tile empty">
+        <div className="panel empty">
           <p>공연을 찾을 수 없어요.</p>
           <button className="btn" onClick={onBack}>
             공연 목록으로
@@ -91,6 +92,7 @@ function Editor({
   const [freshCueId, setFreshCueId] = useState<string | null>(null);
   const [savedAt, setSavedAt] = useState<number | null>(null);
   const titleRef = useRef<HTMLInputElement>(null);
+  const [helpOpen, setHelpOpen] = useState(false);
   const sideRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
@@ -470,6 +472,9 @@ function Editor({
               </>
             )}
           </span>
+          <button className="btn btn--sm btn--ghost btn--icon" onClick={() => setHelpOpen(true)} aria-label="사용법" title="사용법">
+            <CircleHelp size={18} />
+          </button>
           <ThemeToggle compact />
           <button
             className="btn btn--primary"
@@ -579,6 +584,7 @@ function Editor({
           )}
         </aside>
       </main>
+      {helpOpen && <HelpModal onClose={() => setHelpOpen(false)} />}
     </>
   );
 }

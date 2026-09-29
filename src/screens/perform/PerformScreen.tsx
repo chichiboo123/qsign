@@ -32,7 +32,7 @@ export function PerformScreen({ showId, onExit }: Props) {
   if (!show) {
     return (
       <main className="page">
-        <div className="panel tile empty">
+        <div className="panel empty">
           <p>공연을 찾을 수 없어요.</p>
           <button className="btn" onClick={onExit}>
             돌아가기

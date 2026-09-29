@@ -1,5 +1,6 @@
-import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
-import { AlertTriangle, CheckCircle2, Info, X } from 'lucide-react';
+import { createContext, useCallback, useContext, useRef, useState, type ReactNode } from 'react';
+import { AlertTriangle, CheckCircle2, Info } from 'lucide-react';
+import { Modal } from './Modal';
 
 /** 확인창과 알림(토스트)을 앱 어디서나 쓸 수 있게 한다. */
 
@@ -98,73 +99,28 @@ function ConfirmDialog({
 }: ConfirmOptions & { onClose: (v: boolean) => void }) {
   const cancelRef = useRef<HTMLButtonElement>(null);
   const confirmRef = useRef<HTMLButtonElement>(null);
-  const boxRef = useRef<HTMLDivElement>(null);
-  const closeRef = useRef(onClose);
-  closeRef.current = onClose;
-
-  // 창이 열릴 때 한 번만 초점을 옮기고, 닫히면 원래 자리로 돌려준다
-  useEffect(() => {
-    // 위험한 동작은 "취소"에 먼저 초점을 둔다
-    const before = document.activeElement as HTMLElement | null;
-    (danger && !hideCancel ? cancelRef : confirmRef).current?.focus();
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        e.preventDefault();
-        e.stopPropagation();
-        closeRef.current(false);
-      } else if (e.key === 'Tab') {
-        // 초점이 창 밖으로 나가지 않게 한다
-        const items = boxRef.current?.querySelectorAll<HTMLElement>('button, [href], input, select, textarea');
-        if (!items || items.length === 0) return;
-        const first = items[0];
-        const last = items[items.length - 1];
-        if (e.shiftKey && document.activeElement === first) {
-          e.preventDefault();
-          last.focus();
-        } else if (!e.shiftKey && document.activeElement === last) {
-          e.preventDefault();
-          first.focus();
-        }
-      }
-    };
-    window.addEventListener('keydown', onKey, true);
-    return () => {
-      window.removeEventListener('keydown', onKey, true);
-      before?.focus?.();
-    };
-  }, []); // 열릴 때 한 번만
-
   return (
-    <div className="modal-backdrop" onMouseDown={(e) => e.target === e.currentTarget && onClose(false)}>
-      <div
-        ref={boxRef}
-        className={`modal panel ${wide ? 'modal--wide' : ''}`}
-        role={hideCancel ? 'dialog' : 'alertdialog'}
-        aria-modal="true"
-        aria-labelledby="confirm-title"
-      >
-        <button className="btn btn--ghost btn--icon btn--sm modal__x" onClick={() => onClose(false)} aria-label="닫기">
-          <X size={18} />
-        </button>
-        <h2 id="confirm-title" className="modal__title">
-          {title}
-        </h2>
-        {message && <div className="modal__body">{message}</div>}
-        <div className="modal__actions">
+    <Modal
+      title={title}
+      wide={wide}
+      role={hideCancel ? 'dialog' : 'alertdialog'}
+      onClose={() => onClose(false)}
+      // 위험한 동작은 "취소"에 먼저 초점을 둔다
+      initialFocus={danger && !hideCancel ? cancelRef : confirmRef}
+      actions={
+        <>
           {!hideCancel && (
             <button ref={cancelRef} className="btn" onClick={() => onClose(false)}>
               {cancelLabel}
             </button>
           )}
-          <button
-            ref={confirmRef}
-            className={`btn ${danger ? 'btn--danger' : 'btn--primary'}`}
-            onClick={() => onClose(true)}
-          >
+          <button ref={confirmRef} className={`btn ${danger ? 'btn--danger' : 'btn--primary'}`} onClick={() => onClose(true)}>
             {confirmLabel}
           </button>
-        </div>
-      </div>
-    </div>
+        </>
+      }
+    >
+      {message}
+    </Modal>
   );
 }
