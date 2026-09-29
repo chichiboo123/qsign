@@ -457,7 +457,7 @@
   white-space: nowrap;
 }
 .side-cue.is-done {
-  opacity: 0.45;
+  opacity: 0.6;
 }
 .side-cue.is-next {
   border-color: color-mix(in srgb, var(--cue) 70%, transparent);

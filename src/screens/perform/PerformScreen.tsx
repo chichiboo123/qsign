@@ -87,6 +87,7 @@ function Perform({ show, onExit }: { show: Show; onExit: () => void }) {
   );
 
   const start = async () => {
+    if (!lib.loaded) return;
     await engine.resume();
     void enterFullscreen();
     setStarted(true);
@@ -308,7 +309,7 @@ function Perform({ show, onExit }: { show: Show; onExit: () => void }) {
                 <kbd>←</kbd> 이전 (소리 없이)
               </li>
             </ul>
-            <button className="btn btn--primary gate__start" onClick={() => void start()} autoFocus>
+            <button className="btn btn--primary gate__start" onClick={() => void start()} disabled={!lib.loaded} autoFocus>
               <Play size={22} fill="currentColor" aria-hidden="true" /> 공연 시작
             </button>
             <p className="muted small gate__note">

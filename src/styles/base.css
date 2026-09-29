@@ -248,7 +248,7 @@ a {
   box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.18);
 }
 .input::placeholder {
-  color: #6b7385;
+  color: #7a8295;
 }
 textarea.input {
   resize: vertical;
