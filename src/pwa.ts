@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from 'react';
 import { registerSW } from 'virtual:pwa-register';
+import { isDesktopApp } from './desktop';
 
 /**
  * 설치형 웹앱(PWA) 상태: 설치할 수 있는지, 새 버전이 있는지, 오프라인 준비가 됐는지.
@@ -22,6 +23,8 @@ export interface PwaState {
 
 const standaloneQuery = typeof window !== 'undefined' ? window.matchMedia('(display-mode: standalone)') : null;
 const isStandalone = () =>
+  // 윈도우 프로그램은 이미 설치된 앱이다
+  isDesktopApp ||
   !!standaloneQuery?.matches || (navigator as Navigator & { standalone?: boolean }).standalone === true;
 
 let state: PwaState = { canInstall: false, standalone: isStandalone(), needRefresh: false, offlineReady: false };
@@ -49,7 +52,8 @@ export function initPwa() {
   });
   standaloneQuery?.addEventListener('change', () => set({ standalone: isStandalone() }));
 
-  if (import.meta.env.PROD) {
+  // 서비스 워커는 웹 주소(https)에서만. 윈도우 프로그램은 파일을 이미 갖고 있어 필요 없다
+  if (import.meta.env.PROD && !isDesktopApp && /^https?:$/.test(location.protocol)) {
     updateSW = registerSW({
       onNeedRefresh: () => set({ needRefresh: true }),
       onOfflineReady: () => set({ offlineReady: true }),

@@ -1,4 +1,4 @@
-import { Monitor, Smartphone, Tablet, WifiOff } from 'lucide-react';
+import { Download, Monitor, Smartphone, Tablet, WifiOff } from 'lucide-react';
 import { Modal } from './Modal';
 import { detectPlatform, type Platform } from '../pwa';
 
@@ -75,6 +75,24 @@ export function InstallModal({ onClose }: { onClose: () => void }) {
           </section>
         );
       })}
+      <section className="help__sec">
+        <h3>
+          <Download size={18} aria-hidden="true" /> 윈도우 프로그램(.exe)으로 받기
+        </h3>
+        <p>
+          브라우저 없이 쓰는 설치 파일도 있어요. USB로 강당 PC에 옮겨 설치할 때 좋아요.
+        </p>
+        <p>
+          <a className="btn btn--sm" href="https://github.com/chichiboo123/qsign/releases/latest" target="_blank" rel="noopener noreferrer">
+            <Download size={15} aria-hidden="true" /> 설치 파일 받는 곳 열기
+          </a>
+        </p>
+        <p className="muted small">
+          처음 실행할 때 "Windows의 PC 보호" 창이 뜨면 [추가 정보] → [실행]을 눌러요. 프로그램의 공연은 웹과 따로
+          저장되니 [파일로 저장] → [공연 파일 가져오기]로 옮겨요.
+        </p>
+      </section>
+
       <section className="help__sec">
         <h3>
           <WifiOff size={18} aria-hidden="true" /> 알아 두세요

@@ -25,6 +25,9 @@ jobs:
           cache: npm
       - uses: actions/configure-pages@v5
       - run: npm ci
+        env:
+          # 웹 배포에는 윈도우 프로그램용 Electron 파일이 필요 없다
+          ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
       - run: npm run build
         env:
           # 기본은 상대 경로('./')라 커스텀 도메인과 github.io/qsign/ 모두에서 동작한다.

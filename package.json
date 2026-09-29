@@ -8,29 +8,83 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
-    "typecheck": "tsc -b"
+    "typecheck": "tsc -b",
+    "desktop": "npm run build && electron .",
+    "dist:win": "npm run build && electron-builder --win --publish never"
   },
-  "dependencies": {
+  "devDependencies": {
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
     "@fontsource-variable/jetbrains-mono": "^5.3.0",
     "@fontsource-variable/space-grotesk": "^5.3.0",
+    "@types/node": "^26.6.3",
+    "@types/react": "^18.3.31",
+    "@types/react-dom": "^18.3.7",
+    "@vitejs/plugin-react": "^5.2.0",
+    "electron": "^44.4.5",
+    "electron-builder": "^26.15.3",
     "idb": "^8.0.3",
     "jszip": "^3.10.2",
     "lucide-react": "^1.48.0",
     "pretendard": "^1.3.9",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
-  },
-  "devDependencies": {
-    "@types/node": "^26.6.3",
-    "@types/react": "^18.3.31",
-    "@types/react-dom": "^18.3.7",
-    "@vitejs/plugin-react": "^5.2.0",
+    "react-dom": "^18.3.1",
     "typescript": "^5.9.3",
     "vite": "^7.3.6",
     "vite-plugin-pwa": "^1.3.0",
     "workbox-window": "^7.4.1"
+  },
+  "author": "교육뮤지컬 꿈꾸는 치수쌤",
+  "homepage": "https://qsign.chichiboo.link/",
+  "main": "electron/main.cjs",
+  "build": {
+    "appId": "link.chichiboo.qsign",
+    "productName": "Qsign",
+    "copyright": "교육뮤지컬 꿈꾸는 치수쌤",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "package.json"
+    ],
+    "asar": true,
+    "win": {
+      "icon": "electron/icon.png",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "큐싸인",
+      "uninstallDisplayName": "큐싸인",
+      "installerLanguages": [
+        "ko_KR"
+      ],
+      "language": "1042",
+      "deleteAppDataOnUninstall": false,
+      "artifactName": "Qsign-Setup-${version}.${ext}"
+    },
+    "portable": {
+      "artifactName": "Qsign-${version}-Portable.${ext}"
+    }
   }
 }

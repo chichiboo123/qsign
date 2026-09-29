@@ -8,7 +8,14 @@ import { Logo } from '../../components/Logo';
 import { CueTypeBadge } from '../../components/CueTypeBadge';
 import { ThemeToggle } from '../../components/ThemeToggle';
 import { useAudioLibrary } from '../../hooks/useAudioLibrary';
-import { enterFullscreen, exitFullscreen, useBeforeUnload, useWakeLock } from '../../hooks/usePerformGuards';
+import {
+  enterFullscreen,
+  exitFullscreen,
+  useBeforeUnload,
+  useIsFullscreen,
+  useWakeLock,
+} from '../../hooks/usePerformGuards';
+import { isDesktopApp } from '../../desktop';
 import { flattenCues } from '../../lib/showOps';
 import { loadShow } from '../../storage/showStore';
 import { CUE_META } from '../../types/cueMeta';
@@ -42,16 +49,6 @@ export function PerformScreen({ showId, onExit }: Props) {
     );
   }
   return <Perform show={show} onExit={onExit} />;
-}
-
-function useIsFullscreen() {
-  const [fs, setFs] = useState(!!document.fullscreenElement);
-  useEffect(() => {
-    const on = () => setFs(!!document.fullscreenElement);
-    document.addEventListener('fullscreenchange', on);
-    return () => document.removeEventListener('fullscreenchange', on);
-  }, []);
-  return fs;
 }
 
 function Perform({ show, onExit }: { show: Show; onExit: () => void }) {
@@ -447,7 +444,11 @@ function Perform({ show, onExit }: { show: Show; onExit: () => void }) {
                 `효과음 준비 중… ${progress!.done}/${progress!.total}`
               ) : (
                 <>
-                  누르면 전체 화면이 돼요.<span className="key-hint"> 전체 화면을 나가려면 Esc를 길게 누르세요.</span>
+                  누르면 전체 화면이 돼요.{isDesktopApp ? (
+                    ' 전체 화면은 위의 [전체 화면 끝] 버튼으로 끝내요.'
+                  ) : (
+                    <span className="key-hint"> 전체 화면을 나가려면 Esc를 길게 누르세요.</span>
+                  )}
                 </>
               )}
             </p>
