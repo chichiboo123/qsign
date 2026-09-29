@@ -848,3 +848,9 @@
     display: none;
   }
 }
+@media (max-width: 400px) {
+  /* 아주 좁은 휴대폰: 소리 크기 막대는 빼고 전체 볼륨만 (칸 밖으로 잘리지 않게) */
+  .now .level {
+    display: none;
+  }
+}

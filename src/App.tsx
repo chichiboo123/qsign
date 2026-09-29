@@ -66,6 +66,8 @@ export default function App() {
 
   useEffect(() => {
     document.documentElement.classList.toggle('is-perform', view.name === 'perform');
+    // 첫 화면은 한 화면(머리줄~푸터)에 딱 맞춘다
+    document.documentElement.classList.toggle('is-home', view.name === 'home');
     window.scrollTo(0, 0);
   }, [view]);
 
