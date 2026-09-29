@@ -472,7 +472,14 @@ kbd {
 }
 
 .scene {
+  position: relative;
   padding: 0;
+}
+/* [신호 추가] 메뉴가 열린 장은 아래 패널(다음 장, 신호 설정 칸)보다 위에 그린다.
+   패널마다 흐림 효과로 쌓임 층이 따로 생겨서, 메뉴의 z-index만으로는 다른 패널을 넘지 못한다. */
+.scene:has(.add-cue__menu),
+.scene.is-menu-open {
+  z-index: 20;
 }
 .scene__drop {
   padding: var(--space-4);
@@ -1064,7 +1071,8 @@ select.input option {
     width: 40px;
   }
   /* 휴대폰·태블릿에서는 파일을 끌어다 놓을 수 없으니 안내를 숨긴다 (신호의 음원 칸을 눌러 고른다) */
-  .scene__hint {
+  .scene__hint,
+  .drag-only {
     display: none;
   }
 }

@@ -562,9 +562,12 @@ function Editor({
               {flat.length === 0 ? (
                 <ol className="steps steps--big">
                   <li>
-                    왼쪽 장에서 <strong>[신호 추가]</strong>를 눌러요.
+                    장 아래의 <strong>[신호 추가]</strong>를 눌러 종류를 골라요.
                   </li>
-                  <li>음원 파일을 끌어다 놓아요. (여러 개를 한꺼번에 놓아도 돼요)</li>
+                  <li>
+                    음원 칸을 눌러 파일을 골라요.
+                    <span className="drag-only"> 컴퓨터에서는 음원 파일을 장에 끌어다 놓아도 돼요(여러 개도 한꺼번에).</span>
+                  </li>
                   <li>
                     다 되면 위의 <strong>[공연 모드로 시작]</strong>을 눌러요.
                   </li>

@@ -107,7 +107,7 @@ export function SceneBlock({
             ))}
             {scene.cues.length === 0 && (
               <li className="cue-list__empty muted small">
-                아직 신호가 없어요. 아래 [신호 추가]를 누르거나 음원 파일을 여기에 끌어다 놓으세요.
+                아직 신호가 없어요. 아래 [신호 추가]를 눌러 보세요.
               </li>
             )}
           </ul>

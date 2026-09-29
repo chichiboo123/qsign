@@ -9,17 +9,23 @@ export function AddCueMenu({ onAdd }: { onAdd: (type: CueType) => void }) {
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    const scene = ref.current?.closest('.scene');
+    scene?.classList.toggle('is-menu-open', open);
     if (!open) return;
-    const onDown = (e: MouseEvent) => {
+    // 메뉴가 화면 아래로 잘리면 보이도록 스크롤
+    requestAnimationFrame(() =>
+      ref.current?.querySelector('.add-cue__menu')?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }),
+    );
+    const onDown = (e: PointerEvent) => {
       if (!ref.current?.contains(e.target as Node)) setOpen(false);
     };
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') setOpen(false);
     };
-    document.addEventListener('mousedown', onDown);
+    document.addEventListener('pointerdown', onDown);
     document.addEventListener('keydown', onKey);
     return () => {
-      document.removeEventListener('mousedown', onDown);
+      document.removeEventListener('pointerdown', onDown);
       document.removeEventListener('keydown', onKey);
     };
   }, [open]);
