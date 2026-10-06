@@ -42,6 +42,8 @@ import { pad2 } from '../../utils/format';
 import { SceneBlock } from './SceneBlock';
 import { CueInspector } from './CueInspector';
 import { CueRow } from './CueRow';
+import { SetlistMenu } from './SetlistMenu';
+import { exportSetlist, type SetlistFormat } from '../../io/exportSetlist';
 
 interface Props {
   showId: string;
@@ -93,6 +95,7 @@ function Editor({
   const [savedAt, setSavedAt] = useState<number | null>(null);
   const titleRef = useRef<HTMLInputElement>(null);
   const [helpOpen, setHelpOpen] = useState(false);
+  const [setlistBusy, setSetlistBusy] = useState(false);
   const sideRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
@@ -422,6 +425,18 @@ function Editor({
 
   const missingAudio = flat.filter((f) => cueHasAudio(f.cue.type) && (!f.cue.audioId || !lib.map.has(f.cue.audioId)));
 
+  const saveSetlist = async (format: SetlistFormat) => {
+    setSetlistBusy(true);
+    try {
+      const r = await exportSetlist(show.id, format);
+      toast(`${r.fileName} 파일로 저장했어요. 다운로드 폴더를 확인하세요.`, 'success');
+    } catch {
+      toast('셋리스트를 만들지 못했어요.', 'error');
+    } finally {
+      setSetlistBusy(false);
+    }
+  };
+
   const startPerform = async () => {
     if (lib.loaded && missingAudio.length > 0) {
       const ok = await confirm({
@@ -472,6 +487,7 @@ function Editor({
               </>
             )}
           </span>
+          <SetlistMenu disabled={flat.length === 0} busy={setlistBusy} onPick={(f) => void saveSetlist(f)} />
           <button className="btn btn--sm btn--ghost btn--icon" onClick={() => setHelpOpen(true)} aria-label="사용법" title="사용법">
             <CircleHelp size={18} />
           </button>

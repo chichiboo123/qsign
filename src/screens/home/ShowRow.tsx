@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Copy, Download, MoreHorizontal, Pencil, Play, Trash2 } from 'lucide-react';
+import { SetlistMenuItems } from '../../components/SetlistMenuItems';
+import type { SetlistFormat } from '../../io/exportSetlist';
 import type { ShowSummary } from '../../types/show';
 import { formatDate } from '../../utils/format';
 
@@ -10,12 +12,13 @@ interface Props {
   onOpen: () => void;
   onPerform: () => void;
   onExport: () => void;
+  onExportSetlist: (format: SetlistFormat) => void;
   onDuplicate: () => void;
   onDelete: () => void;
 }
 
 /** 공연 목록 한 줄: [공연] [준비] [⋯ 더보기] */
-export function ShowRow({ show, recent, busy, onOpen, onPerform, onExport, onDuplicate, onDelete }: Props) {
+export function ShowRow({ show, recent, busy, onOpen, onPerform, onExport, onExportSetlist, onDuplicate, onDelete }: Props) {
   const [menu, setMenu] = useState(false);
   const ref = useRef<HTMLLIElement>(null);
 
@@ -82,6 +85,12 @@ export function ShowRow({ show, recent, busy, onOpen, onPerform, onExport, onDup
                   파일로 저장<small>USB로 다른 컴퓨터에 옮길 때</small>
                 </span>
               </button>
+              <hr />
+              <SetlistMenuItems
+                disabled={busy || show.cueCount === 0}
+                onPick={(format) => pick(() => onExportSetlist(format))()}
+              />
+              <hr />
               <button role="menuitem" onClick={pick(onDuplicate)}>
                 <Copy size={16} aria-hidden="true" />
                 <span>복제</span>

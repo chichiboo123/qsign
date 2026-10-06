@@ -1,4 +1,4 @@
-import { Clapperboard, Download, HardDrive, Keyboard, ListChecks, MonitorDown } from 'lucide-react';
+import { Clapperboard, Download, FileText, HardDrive, Keyboard, ListChecks, MonitorDown } from 'lucide-react';
 import { Modal } from './Modal';
 
 /** 사용법: 첫 화면과 준비 화면의 [? 사용법]에서 연다 */
@@ -53,6 +53,16 @@ export function HelpModal({ onClose }: { onClose: () => void }) {
         <p>
           공연 목록의 <strong>[⋯] → [파일로 저장]</strong>으로 zip 파일을 만들어 USB로 옮기고, 그 컴퓨터에서
           <strong> [공연 파일 가져오기]</strong>를 누르거나 첫 화면에 파일을 끌어다 놓아요.
+        </p>
+      </section>
+
+      <section className="help__sec">
+        <h3>
+          <FileText size={18} aria-hidden="true" /> 셋리스트 저장하기
+        </h3>
+        <p>
+          공연 목록의 <strong>[⋯]</strong>나 준비 화면 위쪽의 <strong>[셋리스트]</strong>에서 신호 순서표를
+          <strong> PDF</strong>(인쇄용)나 <strong>텍스트(메모)</strong>로 저장할 수 있어요.
         </p>
       </section>
 
