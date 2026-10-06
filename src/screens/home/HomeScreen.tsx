@@ -18,6 +18,7 @@ import {
 import { releaseAudio } from '../../storage/cleanup';
 import { formatBytes, formatDate } from '../../utils/format';
 import { exportShow } from '../../io/exportShow';
+import { exportSetlist, type SetlistFormat } from '../../io/exportSetlist';
 import { ImportError, importShow } from '../../io/importShow';
 import type { ShowSummary } from '../../types/show';
 import { ShowRow } from './ShowRow';
@@ -110,6 +111,18 @@ export function HomeScreen({ onOpen, onPerform }: Props) {
       );
     } catch {
       toast('파일로 저장하지 못했어요.', 'error');
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const handleExportSetlist = async (s: ShowSummary, format: SetlistFormat) => {
+    setBusy(`"${s.title}" 셋리스트를 만드는 중…`);
+    try {
+      const r = await exportSetlist(s.id, format);
+      toast(`${r.fileName} 파일로 저장했어요. 다운로드 폴더를 확인하세요.`, 'success');
+    } catch {
+      toast('셋리스트를 만들지 못했어요.', 'error');
     } finally {
       setBusy(null);
     }
@@ -274,6 +287,7 @@ export function HomeScreen({ onOpen, onPerform }: Props) {
                   onOpen={() => onOpen(s.id)}
                   onPerform={() => onPerform(s.id)}
                   onExport={() => void handleExport(s)}
+                  onExportSetlist={(f) => void handleExportSetlist(s, f)}
                   onDuplicate={() => handleDuplicate(s)}
                   onDelete={() => void handleDelete(s)}
                 />

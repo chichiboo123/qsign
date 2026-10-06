@@ -1,6 +1,7 @@
 import JSZip from 'jszip';
 import { audioIdsOf, loadShow } from '../storage/showStore';
 import { extForRecord, getAudio } from '../storage/audioStore';
+import { download, safeName, stamp } from './download';
 import { PACKAGE_FORMAT, PACKAGE_VERSION, type PackageAudio, type ShowPackage } from './format';
 
 export interface ExportResult {
@@ -9,17 +10,6 @@ export interface ExportResult {
   /** 저장소에서 찾지 못한 음원 수 */
   missing: number;
   bytes: number;
-}
-
-/** 파일 이름에 쓸 수 없는 글자를 뺀다. */
-function safeName(title: string): string {
-  const s = title.replace(/[\\/:*?"<>|\u0000-\u001f]/g, '').replace(/\s+/g, '_').trim();
-  return s.slice(0, 60) || '공연';
-}
-
-function stamp(d = new Date()): string {
-  const p = (n: number) => String(n).padStart(2, '0');
-  return `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}`;
 }
 
 /** show.json + audio/{audioId}.{확장자} 를 zip으로 묶어 내려받는다. */
@@ -56,16 +46,4 @@ export async function exportShow(showId: string): Promise<ExportResult> {
   const fileName = `${safeName(show.title)}_${stamp()}.qsign.zip`;
   download(blob, fileName);
   return { fileName, audioCount: audio.length, missing, bytes: blob.size };
-}
-
-function download(blob: Blob, fileName: string) {
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = fileName;
-  a.rel = 'noopener';
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 60_000);
 }
